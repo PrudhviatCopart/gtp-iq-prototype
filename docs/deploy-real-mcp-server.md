@@ -40,6 +40,8 @@ Your project already includes a Render blueprint file:
 2. Open `cfc-instaquote-mcp` service:
    - Set `QUOTE_API_BASE_URL` to your API service URL
    - Example: `https://cfc-instaquote-api.onrender.com`
+   - Set `MCP_ALLOWED_HOSTS` to your MCP hostname
+   - Example: `cfc-instaquote-mcp.onrender.com`
 
 Then click Manual Deploy for both services.
 
@@ -62,6 +64,9 @@ Then click Manual Deploy for both services.
 
 - If MCP cannot quote:
   - Check `QUOTE_API_BASE_URL` points to correct API URL.
+- If you get `Invalid Host` JSON error:
+   - Set `MCP_ALLOWED_HOSTS` to your exact public MCP host.
+   - Redeploy `cfc-instaquote-mcp` service.
 - If deploy fails:
   - Confirm Node version is 20.
 - If ChatGPT cannot connect:

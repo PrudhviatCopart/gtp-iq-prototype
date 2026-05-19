@@ -13,6 +13,10 @@ const quoteApiBaseUrlRaw = process.env.QUOTE_API_BASE_URL || "http://localhost:8
 const quoteApiBaseUrl = /^https?:\/\//i.test(quoteApiBaseUrlRaw)
   ? quoteApiBaseUrlRaw
   : `https://${quoteApiBaseUrlRaw}`;
+const allowedHosts = String(process.env.MCP_ALLOWED_HOSTS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 const transports = {};
 
@@ -102,7 +106,11 @@ function createServer() {
   return server;
 }
 
-const app = createMcpExpressApp();
+const app = createMcpExpressApp(
+  allowedHosts.length > 0
+    ? { host: "0.0.0.0", allowedHosts }
+    : { host: "0.0.0.0" }
+);
 
 app.post("/mcp", async (req, res) => {
   try {
