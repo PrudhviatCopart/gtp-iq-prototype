@@ -69,161 +69,93 @@ function createServer() {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CashForCars Quote Form</title>
+    <title>CashForCars Quote</title>
     <style>
-      :root {
-        --bg: #f3f6f8;
-        --card: #ffffff;
-        --ink: #13212c;
-        --muted: #5a6b78;
-        --line: #d8e1e8;
-        --brand: #0f766e;
-      }
       body {
         margin: 0;
         font-family: "Segoe UI", Arial, sans-serif;
-        background: radial-gradient(circle at top right, #e4ecef 0%, var(--bg) 44%, #edf1f4 100%);
-        color: var(--ink);
+        background: #f4f7f8;
+        color: #13212c;
       }
       .wrap {
-        max-width: 900px;
-        margin: 12px auto;
-        padding: 10px;
+        padding: 12px;
       }
       .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        box-shadow: 0 8px 20px rgba(19, 33, 44, 0.08);
-        padding: 14px;
+        background: #fff;
+        border: 1px solid #d7e2e7;
+        border-radius: 12px;
+        padding: 12px;
       }
-      h2 {
-        margin: 0 0 6px;
-        font-size: 20px;
-      }
-      p {
-        margin: 0 0 12px;
-        color: var(--muted);
-      }
-      .grid {
+      .row {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      @media (max-width: 680px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
       }
       label {
         display: block;
         font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 5px;
+        font-weight: 600;
+        margin: 6px 0 4px;
       }
       input, select, button {
         width: 100%;
         box-sizing: border-box;
-        border-radius: 9px;
-        border: 1px solid #bfccd7;
+        border: 1px solid #bfd0d8;
+        border-radius: 8px;
+        padding: 8px;
         font-size: 14px;
-        padding: 10px;
       }
       button {
         margin-top: 10px;
-        border: 0;
-        background: var(--brand);
+        background: #0f766e;
         color: #fff;
-        font-weight: 700;
-        cursor: pointer;
-      }
-      .result {
-        margin-top: 12px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        background: #f9fbfc;
-        padding: 10px;
-      }
-      .result a {
-        color: #0f5f84;
-        word-break: break-all;
-      }
-      .error {
-        color: #a11f1f;
+        border: 0;
         font-weight: 700;
       }
-      @media (max-width: 720px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
+      #status {
+        margin-top: 10px;
+        padding: 8px;
+        border: 1px solid #d7e2e7;
+        border-radius: 8px;
+        background: #f8fbfc;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="card">
-        <h2>Instant Vehicle Quote</h2>
-        <p>Enter details and get your estimate in chat.</p>
-        <div class="grid">
-          <div><label for="year">Year</label><input id="year" value="2018" /></div>
-          <div><label for="make">Make</label><input id="make" value="Honda" /></div>
-          <div><label for="model">Model</label><input id="model" value="Accord" /></div>
-          <div><label for="mileage">Mileage</label><input id="mileage" value="82000" /></div>
-          <div>
-            <label for="condition">Condition</label>
-            <select id="condition">
-              <option>excellent</option>
-              <option selected>good</option>
-              <option>fair</option>
-              <option>poor</option>
-            </select>
-          </div>
-          <div>
-            <label for="damageLevel">Damage Level</label>
-            <select id="damageLevel">
-              <option selected>none</option>
-              <option>minor</option>
-              <option>moderate</option>
-              <option>major</option>
-            </select>
-          </div>
-          <div>
-            <label for="drivable">Drivable</label>
-            <select id="drivable">
-              <option selected>yes</option>
-              <option>no</option>
-            </select>
-          </div>
-          <div><label for="zipCode">ZIP</label><input id="zipCode" value="30301" /></div>
+        <h3 style="margin:0 0 8px;">Instant Vehicle Quote</h3>
+        <div class="row">
+          <div><label>Year</label><input id="year" value="2018" /></div>
+          <div><label>Make</label><input id="make" value="Honda" /></div>
+          <div><label>Model</label><input id="model" value="Accord" /></div>
+          <div><label>Mileage</label><input id="mileage" value="82000" /></div>
+          <div><label>Condition</label><select id="condition"><option>excellent</option><option selected>good</option><option>fair</option><option>poor</option></select></div>
+          <div><label>Damage</label><select id="damageLevel"><option selected>none</option><option>minor</option><option>moderate</option><option>major</option></select></div>
+          <div><label>Drivable</label><select id="drivable"><option selected>yes</option><option>no</option></select></div>
+          <div><label>ZIP</label><input id="zipCode" value="30301" /></div>
         </div>
-        <button id="submitBtn">Get Quote</button>
-        <div id="result" class="result">Waiting for input.</div>
+        <button id="getQuoteBtn">Get Quote</button>
+        <div id="status">Ready.</div>
       </div>
     </div>
+
     <script>
-      const resultEl = document.getElementById("result");
+      const statusEl = document.getElementById("status");
 
-      function notifyHeight() {
-        if (window.openai && typeof window.openai.notifyIntrinsicHeight === "function") {
-          window.openai.notifyIntrinsicHeight(document.body.scrollHeight);
-        }
+      function setStatus(text) {
+        statusEl.textContent = text;
       }
 
-      function renderQuote(data) {
-        resultEl.innerHTML =
-          "<div><strong>Firm Offer:</strong> $" + data.firmOffer + "</div>" +
-          "<div><strong>Range:</strong> $" + data.minOffer + " to $" + data.maxOffer + "</div>" +
-          "<div><strong>Confidence:</strong> " + data.confidence + "</div>" +
-          "<div><strong>Accept:</strong> <a href=\"" + data.acceptUrl + "\" target=\"_blank\" rel=\"noopener\">" + data.acceptUrl + "</a></div>";
-      }
-
-      function renderError(message) {
-        resultEl.innerHTML = "<div class=\"error\">" + message + "</div>";
-      }
-
-      async function submitQuote() {
-        if (!window.openai || typeof window.openai.callTool !== "function") {
-          renderError("Widget bridge is unavailable in this environment.");
-          notifyHeight();
-          return;
-        }
-
-        const payload = {
+      function payloadFromForm() {
+        return {
           year: Number(document.getElementById("year").value),
           make: document.getElementById("make").value,
           model: document.getElementById("model").value,
@@ -233,30 +165,41 @@ function createServer() {
           drivable: document.getElementById("drivable").value,
           zipCode: document.getElementById("zipCode").value
         };
-
-        resultEl.textContent = "Calculating offer...";
-        notifyHeight();
-
-        try {
-          const toolResult = await window.openai.callTool("submit_vehicle_quote_from_ui", payload);
-          const structured = toolResult?.structuredContent || null;
-
-          if (toolResult?.isError) {
-            renderError((toolResult?.content && toolResult.content[0]?.text) || "Unable to get quote.");
-          } else if (structured && structured.ok) {
-            renderQuote(structured);
-          } else {
-            renderError("Unexpected response from quote tool.");
-          }
-        } catch (error) {
-          renderError(String(error));
-        }
-
-        notifyHeight();
       }
 
-      document.getElementById("submitBtn").addEventListener("click", submitQuote);
-      notifyHeight();
+      function formatResult(data) {
+        if (!data || !data.ok) {
+          return "Unable to generate quote.";
+        }
+        return "Firm Offer: $" + data.firmOffer + "\n" +
+          "Range: $" + data.minOffer + " to $" + data.maxOffer + "\n" +
+          "Confidence: " + data.confidence + "\n" +
+          "Accept URL: " + data.acceptUrl;
+      }
+
+      async function onGetQuote() {
+        try {
+          if (!window.openai || !window.openai.callTool) {
+            setStatus("ChatGPT bridge not available.");
+            return;
+          }
+          setStatus("Calculating...");
+          const result = await window.openai.callTool("submit_vehicle_quote_from_ui", payloadFromForm());
+          if (result && result.structuredContent) {
+            setStatus(formatResult(result.structuredContent));
+            return;
+          }
+          if (result && result.content && result.content[0] && result.content[0].text) {
+            setStatus(result.content[0].text);
+            return;
+          }
+          setStatus("Unexpected response.");
+        } catch (error) {
+          setStatus(String(error));
+        }
+      }
+
+      document.getElementById("getQuoteBtn").addEventListener("click", onGetQuote);
     </script>
   </body>
 </html>`;
@@ -269,18 +212,10 @@ function createServer() {
             text: html,
             _meta: {
               ui: {
-                prefersBorder: true,
-                csp: {
-                  connectDomains: [],
-                  resourceDomains: []
-                }
+                prefersBorder: true
               },
               "openai/widgetDescription": "Vehicle quote form for make, model, mileage, condition, and ZIP.",
-              "openai/widgetPrefersBorder": true,
-              "openai/widgetCSP": {
-                connect_domains: [],
-                resource_domains: []
-              }
+              "openai/widgetPrefersBorder": true
             }
           }
         ]
