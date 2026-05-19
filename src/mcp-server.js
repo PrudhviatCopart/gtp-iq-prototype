@@ -86,19 +86,48 @@ function createServer() {
         border-radius: 12px;
         padding: 14px;
       }
-      h3 {
-        margin: 0 0 8px;
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
       }
-      p {
-        margin: 0 0 8px;
-        color: #425563;
+      @media (max-width: 680px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
       }
-      .hint {
-        background: #eef4f7;
-        border: 1px solid #d4e1e8;
+      label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      input, select, button {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #bfd0d8;
         border-radius: 8px;
-        padding: 10px;
-        font-size: 13px;
+        padding: 8px;
+        font-size: 14px;
+      }
+      button {
+        margin-top: 10px;
+        border: 0;
+        background: #0f766e;
+        color: #fff;
+        font-weight: 700;
+      }
+      #status {
+        margin-top: 10px;
+        border: 1px solid #d7e2e7;
+        border-radius: 8px;
+        background: #f8fbfc;
+        padding: 8px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      h3 {
+        margin: 0 0 10px;
       }
     </style>
   </head>
@@ -106,12 +135,75 @@ function createServer() {
     <div class="wrap">
       <div class="card">
         <h3>Instant Vehicle Quote</h3>
-        <p>This app is connected and ready.</p>
-        <div class="hint">
-          Tell the assistant your vehicle details (year, make, model, mileage, condition, damage, drivable, ZIP), and it will run the quote tool and return an offer here in chat.
+        <div class="grid">
+          <div><label for="year">Year</label><input id="year" value="2005" /></div>
+          <div><label for="make">Make</label><input id="make" value="Honda" /></div>
+          <div><label for="model">Model</label><input id="model" value="Accord" /></div>
+          <div><label for="mileage">Mileage</label><input id="mileage" value="125000" /></div>
+          <div><label for="condition">Condition</label><select id="condition"><option>excellent</option><option>good</option><option selected>fair</option><option>poor</option></select></div>
+          <div><label for="damageLevel">Damage</label><select id="damageLevel"><option>none</option><option selected>minor</option><option>moderate</option><option>major</option></select></div>
+          <div><label for="drivable">Drivable</label><select id="drivable"><option selected>yes</option><option>no</option></select></div>
+          <div><label for="zipCode">ZIP</label><input id="zipCode" value="30301" /></div>
         </div>
+        <button id="quoteBtn">Get Quote</button>
+        <div id="status">Ready.</div>
       </div>
     </div>
+    <script>
+      function byId(id) { return document.getElementById(id); }
+
+      function setStatus(text) {
+        byId("status").textContent = text;
+      }
+
+      function toPayload() {
+        return {
+          year: Number(byId("year").value),
+          make: byId("make").value,
+          model: byId("model").value,
+          mileage: Number(byId("mileage").value),
+          condition: byId("condition").value,
+          damageLevel: byId("damageLevel").value,
+          drivable: byId("drivable").value,
+          zipCode: byId("zipCode").value
+        };
+      }
+
+      function formatResult(data) {
+        return "Firm Offer: $" + data.firmOffer + "\\n" +
+          "Range: $" + data.minOffer + " to $" + data.maxOffer + "\\n" +
+          "Confidence: " + data.confidence + "\\n" +
+          "Accept URL: " + data.acceptUrl;
+      }
+
+      async function getQuote() {
+        try {
+          if (!window.openai || typeof window.openai.callTool !== "function") {
+            setStatus("Bridge unavailable in this host.");
+            return;
+          }
+
+          setStatus("Calculating...");
+          var result = await window.openai.callTool("submit_vehicle_quote_from_ui", toPayload());
+
+          if (result && result.structuredContent && result.structuredContent.ok) {
+            setStatus(formatResult(result.structuredContent));
+            return;
+          }
+
+          if (result && result.content && result.content[0] && result.content[0].text) {
+            setStatus(result.content[0].text);
+            return;
+          }
+
+          setStatus("Unexpected response from tool.");
+        } catch (error) {
+          setStatus(String(error));
+        }
+      }
+
+      byId("quoteBtn").addEventListener("click", getQuote);
+    </script>
   </body>
 </html>`;
 
