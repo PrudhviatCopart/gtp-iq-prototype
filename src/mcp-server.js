@@ -84,123 +84,34 @@ function createServer() {
         background: #fff;
         border: 1px solid #d7e2e7;
         border-radius: 12px;
-        padding: 12px;
+        padding: 14px;
       }
-      .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+      h3 {
+        margin: 0 0 8px;
       }
-      @media (max-width: 680px) {
-        .row {
-          grid-template-columns: 1fr;
-        }
+      p {
+        margin: 0 0 8px;
+        color: #425563;
       }
-      label {
-        display: block;
-        font-size: 12px;
-        font-weight: 600;
-        margin: 6px 0 4px;
-      }
-      input, select, button {
-        width: 100%;
-        box-sizing: border-box;
-        border: 1px solid #bfd0d8;
+      .hint {
+        background: #eef4f7;
+        border: 1px solid #d4e1e8;
         border-radius: 8px;
-        padding: 8px;
-        font-size: 14px;
-      }
-      button {
-        margin-top: 10px;
-        background: #0f766e;
-        color: #fff;
-        border: 0;
-        font-weight: 700;
-      }
-      #status {
-        margin-top: 10px;
-        padding: 8px;
-        border: 1px solid #d7e2e7;
-        border-radius: 8px;
-        background: #f8fbfc;
-        white-space: pre-wrap;
-        word-break: break-word;
+        padding: 10px;
+        font-size: 13px;
       }
     </style>
   </head>
   <body>
     <div class="wrap">
       <div class="card">
-        <h3 style="margin:0 0 8px;">Instant Vehicle Quote</h3>
-        <div class="row">
-          <div><label>Year</label><input id="year" value="2018" /></div>
-          <div><label>Make</label><input id="make" value="Honda" /></div>
-          <div><label>Model</label><input id="model" value="Accord" /></div>
-          <div><label>Mileage</label><input id="mileage" value="82000" /></div>
-          <div><label>Condition</label><select id="condition"><option>excellent</option><option selected>good</option><option>fair</option><option>poor</option></select></div>
-          <div><label>Damage</label><select id="damageLevel"><option selected>none</option><option>minor</option><option>moderate</option><option>major</option></select></div>
-          <div><label>Drivable</label><select id="drivable"><option selected>yes</option><option>no</option></select></div>
-          <div><label>ZIP</label><input id="zipCode" value="30301" /></div>
+        <h3>Instant Vehicle Quote</h3>
+        <p>This app is connected and ready.</p>
+        <div class="hint">
+          Tell the assistant your vehicle details (year, make, model, mileage, condition, damage, drivable, ZIP), and it will run the quote tool and return an offer here in chat.
         </div>
-        <button id="getQuoteBtn">Get Quote</button>
-        <div id="status">Ready.</div>
       </div>
     </div>
-
-    <script>
-      const statusEl = document.getElementById("status");
-
-      function setStatus(text) {
-        statusEl.textContent = text;
-      }
-
-      function payloadFromForm() {
-        return {
-          year: Number(document.getElementById("year").value),
-          make: document.getElementById("make").value,
-          model: document.getElementById("model").value,
-          mileage: Number(document.getElementById("mileage").value),
-          condition: document.getElementById("condition").value,
-          damageLevel: document.getElementById("damageLevel").value,
-          drivable: document.getElementById("drivable").value,
-          zipCode: document.getElementById("zipCode").value
-        };
-      }
-
-      function formatResult(data) {
-        if (!data || !data.ok) {
-          return "Unable to generate quote.";
-        }
-        return "Firm Offer: $" + data.firmOffer + "\n" +
-          "Range: $" + data.minOffer + " to $" + data.maxOffer + "\n" +
-          "Confidence: " + data.confidence + "\n" +
-          "Accept URL: " + data.acceptUrl;
-      }
-
-      async function onGetQuote() {
-        try {
-          if (!window.openai || !window.openai.callTool) {
-            setStatus("ChatGPT bridge not available.");
-            return;
-          }
-          setStatus("Calculating...");
-          const result = await window.openai.callTool("submit_vehicle_quote_from_ui", payloadFromForm());
-          if (result && result.structuredContent) {
-            setStatus(formatResult(result.structuredContent));
-            return;
-          }
-          if (result && result.content && result.content[0] && result.content[0].text) {
-            setStatus(result.content[0].text);
-            return;
-          }
-          setStatus("Unexpected response.");
-        } catch (error) {
-          setStatus(String(error));
-        }
-      }
-
-      document.getElementById("getQuoteBtn").addEventListener("click", onGetQuote);
-    </script>
   </body>
 </html>`;
 
