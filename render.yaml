@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: cfc-instaquote-api
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: CONTINUE_BASE_URL
+        value: https://www.cashforcars.com/instaquote/
+      - key: SECRET_KEY
+        generateValue: true
+
+  - type: web
+    name: cfc-instaquote-mcp
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm run mcp
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: QUOTE_API_BASE_URL
+        value: https://cfc-instaquote-api.onrender.com

@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: CashForCars GPT InstaQuote Prototype API
+  version: 0.1.0
+servers:
+  - url: https://YOUR-PUBLIC-URL
+paths:
+  /health:
+    get:
+      operationId: health
+      summary: Health check
+      responses:
+        "200":
+          description: API is healthy
+  /api/quote:
+    post:
+      operationId: createVehicleQuote
+      summary: Create an instant vehicle quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - year
+                - make
+                - model
+                - mileage
+                - condition
+                - damageLevel
+                - drivable
+                - zipCode
+              properties:
+                year:
+                  type: integer
+                make:
+                  type: string
+                model:
+                  type: string
+                mileage:
+                  type: integer
+                condition:
+                  type: string
+                  enum: [excellent, good, fair, poor]
+                damageLevel:
+                  type: string
+                  enum: [none, minor, moderate, major]
+                drivable:
+                  type: string
+                  enum: [yes, no]
+                zipCode:
+                  type: string
+      responses:
+        "200":
+          description: Quote generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  quoteId:
+                    type: string
+                  minOffer:
+                    type: integer
+                  maxOffer:
+                    type: integer
+                  firmOffer:
+                    type: integer
+                  currency:
+                    type: string
+                  confidence:
+                    type: string
+                  acceptUrl:
+                    type: string
+                  expiresAt:
+                    type: string
+                    format: date-time
+                  disclaimers:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          description: Validation error
+  /api/accept:
+    post:
+      operationId: acceptQuote
+      summary: Mark quote accepted
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quoteId]
+              properties:
+                quoteId:
+                  type: string
+      responses:
+        "200":
+          description: Accepted

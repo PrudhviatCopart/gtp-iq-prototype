@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPT InstaQuote Prototype Tester</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(180deg, #f4f6fb 0%, #eef2f5 100%);
+        color: #1f2937;
+      }
+      .wrap {
+        max-width: 860px;
+        margin: 30px auto;
+        background: #fff;
+        border: 1px solid #d5dde6;
+        border-radius: 12px;
+        box-shadow: 0 14px 30px rgba(31, 41, 55, 0.08);
+        padding: 22px;
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 24px;
+      }
+      p {
+        color: #4b5563;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      input, select {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #c5ced8;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      button {
+        margin-top: 16px;
+        background: #0f766e;
+        color: white;
+        border: 0;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      pre {
+        background: #111827;
+        color: #e5e7eb;
+        padding: 12px;
+        border-radius: 8px;
+        overflow: auto;
+      }
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>GPT InstaQuote Prototype Tester</h1>
+      <p>Use this page to test your quote API before connecting it to a Custom GPT Action.</p>
+      <div class="grid">
+        <div>
+          <label for="year">Year</label>
+          <input id="year" value="2018" />
+        </div>
+        <div>
+          <label for="make">Make</label>
+          <input id="make" value="Toyota" />
+        </div>
+        <div>
+          <label for="model">Model</label>
+          <input id="model" value="Camry" />
+        </div>
+        <div>
+          <label for="mileage">Mileage</label>
+          <input id="mileage" value="82000" />
+        </div>
+        <div>
+          <label for="condition">Condition</label>
+          <select id="condition">
+            <option>excellent</option>
+            <option selected>good</option>
+            <option>fair</option>
+            <option>poor</option>
+          </select>
+        </div>
+        <div>
+          <label for="damageLevel">Damage Level</label>
+          <select id="damageLevel">
+            <option selected>none</option>
+            <option>minor</option>
+            <option>moderate</option>
+            <option>major</option>
+          </select>
+        </div>
+        <div>
+          <label for="drivable">Drivable</label>
+          <select id="drivable">
+            <option selected>yes</option>
+            <option>no</option>
+          </select>
+        </div>
+        <div>
+          <label for="zipCode">ZIP</label>
+          <input id="zipCode" value="30301" />
+        </div>
+      </div>
+      <button id="runQuote">Get Quote</button>
+      <h3>Response</h3>
+      <pre id="result">No request yet.</pre>
+    </div>
+
+    <script>
+      async function requestQuote() {
+        const payload = {
+          year: Number(document.getElementById("year").value),
+          make: document.getElementById("make").value,
+          model: document.getElementById("model").value,
+          mileage: Number(document.getElementById("mileage").value),
+          condition: document.getElementById("condition").value,
+          damageLevel: document.getElementById("damageLevel").value,
+          drivable: document.getElementById("drivable").value,
+          zipCode: document.getElementById("zipCode").value
+        };
+
+        const result = document.getElementById("result");
+        result.textContent = "Loading...";
+
+        try {
+          const response = await fetch("/api/quote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const json = await response.json();
+          result.textContent = JSON.stringify(json, null, 2);
+        } catch (error) {
+          result.textContent = String(error);
+        }
+      }
+
+      document.getElementById("runQuote").addEventListener("click", requestQuote);
+    </script>
+  </body>
+</html>
