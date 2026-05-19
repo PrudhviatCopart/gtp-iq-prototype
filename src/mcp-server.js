@@ -60,7 +60,7 @@ function createServer() {
     "quote-form-ui",
     "ui://quote/form.html",
     {
-      mimeType: "text/html",
+      mimeType: "text/html;profile=mcp-app",
       description: "Interactive vehicle quote form"
     },
     async () => {
@@ -265,11 +265,22 @@ function createServer() {
         contents: [
           {
             uri: "ui://quote/form.html",
-            mimeType: "text/html",
+            mimeType: "text/html;profile=mcp-app",
             text: html,
             _meta: {
+              ui: {
+                prefersBorder: true,
+                csp: {
+                  connectDomains: [],
+                  resourceDomains: []
+                }
+              },
               "openai/widgetDescription": "Vehicle quote form for make, model, mileage, condition, and ZIP.",
-              "openai/widgetPrefersBorder": true
+              "openai/widgetPrefersBorder": true,
+              "openai/widgetCSP": {
+                connect_domains: [],
+                resource_domains: []
+              }
             }
           }
         ]
@@ -285,8 +296,7 @@ function createServer() {
       inputSchema: {},
       _meta: {
         ui: {
-          resourceUri: "ui://quote/form.html",
-          visibility: ["model", "app"]
+          resourceUri: "ui://quote/form.html"
         },
         "openai/outputTemplate": "ui://quote/form.html",
         "openai/widgetAccessible": true,
@@ -352,9 +362,7 @@ function createServer() {
         zipCode: z.string().regex(/^[0-9]{5}$/)
       },
       _meta: {
-        ui: {
-          visibility: ["app", "model"]
-        },
+        ui: {},
         "openai/widgetAccessible": true
       }
     },
