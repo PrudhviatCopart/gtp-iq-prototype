@@ -78,6 +78,16 @@ Use this path if you want MCP instead of Actions.
 
 The MCP server will call your local quote API and return offer info back inside chat.
 
+### MCP UI behavior
+
+This MCP server now includes an in-chat widget tool:
+
+- `open_quote_form_ui`
+
+To make ChatGPT open the form card instead of asking only text questions, add this instruction in your GPT:
+
+- "When user intent is to sell/check price for a vehicle, call `open_quote_form_ui` first."
+
 ## 4) Expose local API to internet
 
 Custom GPT Actions must call a public URL. For prototype you can use a tunnel tool:
