@@ -139,11 +139,15 @@ function createServer() {
           <div><label for="year">Year</label><input id="year" value="2005" /></div>
           <div><label for="make">Make</label><input id="make" value="Honda" /></div>
           <div><label for="model">Model</label><input id="model" value="Accord" /></div>
-          <div><label for="mileage">Mileage</label><input id="mileage" value="125000" /></div>
-          <div><label for="condition">Condition</label><select id="condition"><option>excellent</option><option>good</option><option selected>fair</option><option>poor</option></select></div>
-          <div><label for="damageLevel">Damage</label><select id="damageLevel"><option>none</option><option selected>minor</option><option>moderate</option><option>major</option></select></div>
-          <div><label for="drivable">Drivable</label><select id="drivable"><option selected>yes</option><option>no</option></select></div>
+          <div><label for="trim">Trim</label><input id="trim" value="EX" /></div>
+          <div><label for="titleType">Title Type</label><select id="titleType"><option selected>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select></div>
           <div><label for="zipCode">ZIP</label><input id="zipCode" value="30301" /></div>
+          <div><label for="mileage">Mileage</label><input id="mileage" value="125000" /></div>
+          <div><label for="startsDrives">Starts and Drives</label><select id="startsDrives"><option selected>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select></div>
+          <div><label for="outstandingLoan">Outstanding Loan</label><select id="outstandingLoan"><option>yes</option><option selected>no</option></select></div>
+          <div><label for="keysAvailable">Keys Available</label><select id="keysAvailable"><option selected>yes</option><option>no</option></select></div>
+          <div><label for="hasDamage">Any Damage</label><select id="hasDamage"><option selected>no</option><option>yes</option></select></div>
+          <div><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="4045551212" /></div>
         </div>
         <button id="quoteBtn">Get Quote</button>
         <div id="status">Ready.</div>
@@ -161,15 +165,22 @@ function createServer() {
           year: Number(byId("year").value),
           make: byId("make").value,
           model: byId("model").value,
+          trim: byId("trim").value,
+          titleType: byId("titleType").value,
+          zipCode: byId("zipCode").value,
           mileage: Number(byId("mileage").value),
-          condition: byId("condition").value,
-          damageLevel: byId("damageLevel").value,
-          drivable: byId("drivable").value,
-          zipCode: byId("zipCode").value
+          startsDrives: byId("startsDrives").value,
+          outstandingLoan: byId("outstandingLoan").value,
+          keysAvailable: byId("keysAvailable").value,
+          hasDamage: byId("hasDamage").value,
+          phoneNumber: byId("phoneNumber").value
         };
       }
 
       function formatResult(data) {
+        if (data.eligible === false) {
+          return "No instant offer generated. Reason: " + data.reason;
+        }
         return "Firm Offer: $" + data.firmOffer + "\\n" +
           "Range: $" + data.minOffer + " to $" + data.maxOffer + "\\n" +
           "Confidence: " + data.confidence + "\\n" +
@@ -217,7 +228,7 @@ function createServer() {
               ui: {
                 prefersBorder: true
               },
-              "openai/widgetDescription": "Vehicle quote form for make, model, mileage, condition, and ZIP.",
+              "openai/widgetDescription": "Vehicle quote form with title, starts/drives, loan, keys, damage, and phone fields.",
               "openai/widgetPrefersBorder": true
             }
           }
@@ -256,16 +267,20 @@ function createServer() {
     "create_vehicle_quote",
     {
       title: "Create Vehicle Quote",
-      description: "Generate a prototype vehicle offer using year, make, model, mileage, condition and location.",
+      description: "Generate a prototype vehicle offer using year, make, model, trim, title, location, and vehicle state.",
       inputSchema: {
         year: z.number().int().min(1980).max(new Date().getFullYear() + 1),
         make: z.string().min(1),
         model: z.string().min(1),
+        trim: z.string().min(1),
+        titleType: z.enum(["clean", "salvage", "rebuilt", "no_title"]),
+        zipCode: z.string().regex(/^[0-9]{5}$/),
         mileage: z.number().int().min(0).max(500000),
-        condition: z.enum(["excellent", "good", "fair", "poor"]),
-        damageLevel: z.enum(["none", "minor", "moderate", "major"]),
-        drivable: z.enum(["yes", "no"]),
-        zipCode: z.string().regex(/^[0-9]{5}$/)
+        startsDrives: z.enum(["starts_and_drives", "starts_no_drive", "no_start"]),
+        outstandingLoan: z.enum(["yes", "no"]),
+        keysAvailable: z.enum(["yes", "no"]),
+        hasDamage: z.enum(["yes", "no"]),
+        phoneNumber: z.string().min(10)
       }
     },
     async (args) => {
@@ -293,11 +308,15 @@ function createServer() {
         year: z.number().int().min(1980).max(new Date().getFullYear() + 1),
         make: z.string().min(1),
         model: z.string().min(1),
+        trim: z.string().min(1),
+        titleType: z.enum(["clean", "salvage", "rebuilt", "no_title"]),
+        zipCode: z.string().regex(/^[0-9]{5}$/),
         mileage: z.number().int().min(0).max(500000),
-        condition: z.enum(["excellent", "good", "fair", "poor"]),
-        damageLevel: z.enum(["none", "minor", "moderate", "major"]),
-        drivable: z.enum(["yes", "no"]),
-        zipCode: z.string().regex(/^[0-9]{5}$/)
+        startsDrives: z.enum(["starts_and_drives", "starts_no_drive", "no_start"]),
+        outstandingLoan: z.enum(["yes", "no"]),
+        keysAvailable: z.enum(["yes", "no"]),
+        hasDamage: z.enum(["yes", "no"]),
+        phoneNumber: z.string().min(10)
       },
       _meta: {
         ui: {},

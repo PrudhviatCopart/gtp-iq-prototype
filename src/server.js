@@ -21,23 +21,22 @@ const mileageBuckets = [
   { max: Infinity, factor: 0.76 }
 ];
 
-const conditionFactors = {
-  excellent: 1.12,
-  good: 1.0,
-  fair: 0.86,
-  poor: 0.68
+const titleTypeFactors = {
+  clean: 1.0,
+  rebuilt: 0.78,
+  salvage: 0.6,
+  no_title: 0.45
 };
 
-const damageFactors = {
-  none: 1.0,
-  minor: 0.93,
-  moderate: 0.84,
-  major: 0.72
+const startsDrivesFactors = {
+  starts_and_drives: 1.0,
+  starts_no_drive: 0.8,
+  no_start: 0.62
 };
 
-const drivableFactors = {
+const binaryFactors = {
   yes: 1.0,
-  no: 0.83
+  no: 0.9
 };
 
 function priceModel(input) {
@@ -45,6 +44,7 @@ function priceModel(input) {
   const mileage = Number(input.mileage);
   const make = String(input.make || "").toLowerCase();
   const model = String(input.model || "").toLowerCase();
+  const trim = String(input.trim || "").toLowerCase();
 
   const age = Math.max(0, new Date().getFullYear() - year);
   let basePrice = 12000 - age * 650;
@@ -58,13 +58,17 @@ function priceModel(input) {
   if (model.includes("truck") || model.includes("f150") || model.includes("silverado")) {
     basePrice += 1000;
   }
+  if (trim.includes("limited") || trim.includes("touring") || trim.includes("platinum")) {
+    basePrice += 500;
+  }
 
   const mileageFactor = mileageBuckets.find((b) => mileage <= b.max)?.factor ?? 0.76;
-  const conditionFactor = conditionFactors[input.condition] ?? 0.86;
-  const damageFactor = damageFactors[input.damageLevel] ?? 0.84;
-  const drivableFactor = drivableFactors[input.drivable] ?? 0.83;
+  const titleFactor = titleTypeFactors[input.titleType] ?? 0.6;
+  const startsDrivesFactor = startsDrivesFactors[input.startsDrives] ?? 0.62;
+  const keysFactor = binaryFactors[input.keysAvailable] ?? 0.9;
+  const damageFactor = input.hasDamage === "yes" ? 0.82 : 1.0;
 
-  const raw = Math.max(400, basePrice * mileageFactor * conditionFactor * damageFactor * drivableFactor);
+  const raw = Math.max(250, basePrice * mileageFactor * titleFactor * startsDrivesFactor * keysFactor * damageFactor);
   const rounded = Math.round(raw / 50) * 50;
 
   return {
@@ -80,11 +84,15 @@ function validateQuoteInput(body) {
     "year",
     "make",
     "model",
+    "trim",
+    "titleType",
     "mileage",
-    "condition",
-    "damageLevel",
-    "drivable",
+    "startsDrives",
+    "outstandingLoan",
+    "keysAvailable",
+    "hasDamage",
     "zipCode"
+    ,"phoneNumber"
   ];
 
   const missing = required.filter((k) => body[k] === undefined || body[k] === null || body[k] === "");
@@ -105,6 +113,32 @@ function validateQuoteInput(body) {
     return "Invalid zipCode. Expected 5-digit US ZIP";
   }
 
+  const titleTypes = ["clean", "salvage", "rebuilt", "no_title"];
+  if (!titleTypes.includes(String(body.titleType))) {
+    return "Invalid titleType. Use clean, salvage, rebuilt, or no_title";
+  }
+
+  const startsDrivesValues = ["starts_and_drives", "starts_no_drive", "no_start"];
+  if (!startsDrivesValues.includes(String(body.startsDrives))) {
+    return "Invalid startsDrives. Use starts_and_drives, starts_no_drive, or no_start";
+  }
+
+  const yesNo = ["yes", "no"];
+  if (!yesNo.includes(String(body.outstandingLoan))) {
+    return "Invalid outstandingLoan. Use yes or no";
+  }
+  if (!yesNo.includes(String(body.keysAvailable))) {
+    return "Invalid keysAvailable. Use yes or no";
+  }
+  if (!yesNo.includes(String(body.hasDamage))) {
+    return "Invalid hasDamage. Use yes or no";
+  }
+
+  const digits = String(body.phoneNumber).replace(/\D/g, "");
+  if (digits.length !== 10 && digits.length !== 11) {
+    return "Invalid phoneNumber. Provide a valid US phone number";
+  }
+
   return null;
 }
 
@@ -123,6 +157,15 @@ app.post("/api/quote", (req, res) => {
     return res.status(400).json({ ok: false, error });
   }
 
+  if (String(req.body.outstandingLoan) === "yes") {
+    return res.json({
+      ok: true,
+      eligible: false,
+      reason: "Vehicle has an outstanding loan. No instant offer generated.",
+      nextStep: "Collect payoff details and route to assisted flow."
+    });
+  }
+
   const quote = priceModel(req.body);
   const quoteId = crypto.randomUUID();
   const issuedAt = new Date().toISOString();
@@ -133,8 +176,14 @@ app.post("/api/quote", (req, res) => {
     year: Number(req.body.year),
     make: String(req.body.make),
     model: String(req.body.model),
+    trim: String(req.body.trim),
     mileage: Number(req.body.mileage),
+    titleType: String(req.body.titleType),
+    startsDrives: String(req.body.startsDrives),
+    keysAvailable: String(req.body.keysAvailable),
+    hasDamage: String(req.body.hasDamage),
     zipCode: String(req.body.zipCode),
+    phoneNumber: String(req.body.phoneNumber),
     firmOffer: quote.firmOffer,
     issuedAt,
     expiresAt
