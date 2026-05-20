@@ -136,18 +136,18 @@ function createServer() {
       <div class="card">
         <h3>Instant Vehicle Quote</h3>
         <div class="grid">
-          <div><label for="year">Year</label><input id="year" value="2005" /></div>
-          <div><label for="make">Make</label><input id="make" value="Honda" /></div>
-          <div><label for="model">Model</label><input id="model" value="Accord" /></div>
-          <div><label for="trim">Trim</label><input id="trim" value="EX" /></div>
-          <div><label for="titleType">Title Type</label><select id="titleType"><option selected>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select></div>
-          <div><label for="zipCode">ZIP</label><input id="zipCode" value="30301" /></div>
-          <div><label for="mileage">Mileage</label><input id="mileage" value="125000" /></div>
-          <div><label for="startsDrives">Starts and Drives</label><select id="startsDrives"><option selected>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select></div>
-          <div><label for="outstandingLoan">Outstanding Loan</label><select id="outstandingLoan"><option>yes</option><option selected>no</option></select></div>
-          <div><label for="keysAvailable">Keys Available</label><select id="keysAvailable"><option selected>yes</option><option>no</option></select></div>
-          <div><label for="hasDamage">Any Damage</label><select id="hasDamage"><option selected>no</option><option>yes</option></select></div>
-          <div><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="4045551212" /></div>
+          <div><label for="year">Year</label><input id="year" value="" /></div>
+          <div><label for="make">Make</label><input id="make" value="" /></div>
+          <div><label for="model">Model</label><input id="model" value="" /></div>
+          <div><label for="trim">Trim</label><input id="trim" value="" /></div>
+          <div><label for="titleType">Title Type</label><select id="titleType"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select></div>
+          <div><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
+          <div><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
+          <div><label for="startsDrives">Starts and Drives</label><select id="startsDrives"><option value="" selected>Select</option><option>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select></div>
+          <div><label for="outstandingLoan">Outstanding Loan</label><select id="outstandingLoan"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+          <div><label for="keysAvailable">Keys Available</label><select id="keysAvailable"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+          <div><label for="hasDamage">Any Damage</label><select id="hasDamage"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+          <div><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
         </div>
         <button id="quoteBtn">Get Quote</button>
         <div id="status">Ready.</div>
@@ -158,6 +158,40 @@ function createServer() {
 
       function setStatus(text) {
         byId("status").textContent = text;
+      }
+
+      function prefillFromToolInput() {
+        var input = (window.openai && window.openai.toolInput) ? window.openai.toolInput : null;
+        if (!input) {
+          return;
+        }
+
+        var fields = [
+          "year",
+          "make",
+          "model",
+          "trim",
+          "titleType",
+          "zipCode",
+          "mileage",
+          "startsDrives",
+          "outstandingLoan",
+          "keysAvailable",
+          "hasDamage",
+          "phoneNumber"
+        ];
+
+        for (var i = 0; i < fields.length; i++) {
+          var key = fields[i];
+          var value = input[key];
+          if (value === undefined || value === null || value === "") {
+            continue;
+          }
+          var el = byId(key);
+          if (el) {
+            el.value = String(value);
+          }
+        }
       }
 
       function toPayload() {
@@ -214,6 +248,7 @@ function createServer() {
       }
 
       byId("quoteBtn").addEventListener("click", getQuote);
+      prefillFromToolInput();
     </script>
   </body>
 </html>`;
@@ -242,7 +277,13 @@ function createServer() {
     {
       title: "Open Quote Form UI",
       description: "Open an interactive vehicle quote form in chat.",
-      inputSchema: {},
+      inputSchema: {
+        year: z.number().int().min(1980).max(new Date().getFullYear() + 1).optional(),
+        make: z.string().min(1).optional(),
+        model: z.string().min(1).optional(),
+        trim: z.string().min(1).optional(),
+        mileage: z.number().int().min(0).max(500000).optional()
+      },
       _meta: {
         ui: {
           resourceUri: "ui://quote/form.html"
@@ -253,12 +294,10 @@ function createServer() {
         "openai/toolInvocation/invoked": "Quote form ready"
       }
     },
-    async () => {
+    async (args) => {
       return {
         content: [{ type: "text", text: "Quote form opened. Fill the fields to get an offer." }],
-        structuredContent: {
-          opened: true
-        }
+        structuredContent: { opened: true, ...args }
       };
     }
   );
