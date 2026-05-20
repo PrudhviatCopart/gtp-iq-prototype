@@ -282,7 +282,14 @@ function createServer() {
         make: z.string().min(1).optional(),
         model: z.string().min(1).optional(),
         trim: z.string().min(1).optional(),
-        mileage: z.number().int().min(0).max(500000).optional()
+        titleType: z.enum(["clean", "salvage", "rebuilt", "no_title"]).optional(),
+        zipCode: z.string().regex(/^[0-9]{5}$/).optional(),
+        mileage: z.number().int().min(0).max(500000).optional(),
+        startsDrives: z.enum(["starts_and_drives", "starts_no_drive", "no_start"]).optional(),
+        outstandingLoan: z.enum(["yes", "no"]).optional(),
+        keysAvailable: z.enum(["yes", "no"]).optional(),
+        hasDamage: z.enum(["yes", "no"]).optional(),
+        phoneNumber: z.string().min(10).optional()
       },
       _meta: {
         ui: {
