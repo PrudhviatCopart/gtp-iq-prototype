@@ -154,6 +154,15 @@ function createServer() {
         border-radius: 8px;
         padding: 10px 14px;
       }
+      .input-error {
+        border-color: #cf2e2e;
+        background: #fff6f6;
+      }
+      .field-error {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #b42318;
+      }
       h3 {
         margin: 0 0 10px;
       }
@@ -260,6 +269,73 @@ function createServer() {
         }
       }
 
+      function clearFieldError(el) {
+        if (!el) {
+          return;
+        }
+        el.classList.remove("input-error");
+        var errorEl = byId(el.id + "-error");
+        if (errorEl && errorEl.parentNode) {
+          errorEl.parentNode.removeChild(errorEl);
+        }
+      }
+
+      function setFieldError(el, message) {
+        if (!el) {
+          return;
+        }
+        el.classList.add("input-error");
+
+        var existing = byId(el.id + "-error");
+        if (existing) {
+          existing.textContent = message;
+          return;
+        }
+
+        var errorEl = document.createElement("div");
+        errorEl.id = el.id + "-error";
+        errorEl.className = "field-error";
+        errorEl.textContent = message;
+        el.parentNode.appendChild(errorEl);
+      }
+
+      function validateRequiredFields() {
+        var requiredIds = [
+          "year",
+          "make",
+          "model",
+          "trim",
+          "titleType",
+          "zipCode",
+          "mileage",
+          "startsDrives",
+          "outstandingLoan",
+          "keysAvailable",
+          "hasDamage",
+          "phoneNumber"
+        ];
+
+        var hasError = false;
+        for (var i = 0; i < requiredIds.length; i++) {
+          var id = requiredIds[i];
+          var el = byId(id);
+          var value = el ? String(el.value || "").trim() : "";
+          clearFieldError(el);
+
+          if (!value) {
+            setFieldError(el, "This field is required.");
+            hasError = true;
+          }
+        }
+
+        if (hasError) {
+          setStatus("Please fill all required fields.");
+          return false;
+        }
+
+        return true;
+      }
+
       function toPayload() {
         var yearVal = byId("year").value;
         var mileageVal = byId("mileage").value;
@@ -290,6 +366,10 @@ function createServer() {
         try {
           if (!window.openai || typeof window.openai.callTool !== "function") {
             setStatus("Bridge unavailable in this host.");
+            return;
+          }
+
+          if (!validateRequiredFields()) {
             return;
           }
 
