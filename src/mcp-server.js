@@ -126,6 +126,34 @@ function createServer() {
         white-space: pre-wrap;
         word-break: break-word;
       }
+      .offer-wrap {
+        margin-top: 10px;
+        border: 1px solid #d5e2e8;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #ffffff 0%, #f6fafb 100%);
+        padding: 12px;
+      }
+      .offer-label {
+        font-size: 12px;
+        color: #4c6777;
+        margin-bottom: 6px;
+      }
+      .offer-price {
+        font-size: 32px;
+        line-height: 1;
+        font-weight: 800;
+        color: #0f4b66;
+        margin-bottom: 10px;
+      }
+      .accept-btn {
+        display: inline-block;
+        text-decoration: none;
+        background: #0f766e;
+        color: #ffffff;
+        font-weight: 700;
+        border-radius: 8px;
+        padding: 10px 14px;
+      }
       h3 {
         margin: 0 0 10px;
       }
@@ -158,6 +186,16 @@ function createServer() {
 
       function setStatus(text) {
         byId("status").textContent = text;
+      }
+
+      function renderOffer(data) {
+        var html =
+          "<div class=\"offer-wrap\">" +
+            "<div class=\"offer-label\">Your Instant Offer</div>" +
+            "<div class=\"offer-price\">$" + data.firmOffer + "</div>" +
+            "<a class=\"accept-btn\" href=\"" + data.acceptUrl + "\" target=\"_blank\" rel=\"noopener\">Accept Offer</a>" +
+          "</div>";
+        byId("status").innerHTML = html;
       }
 
       function prefillFromToolInput() {
@@ -215,10 +253,7 @@ function createServer() {
         if (data.eligible === false) {
           return "No instant offer generated. Reason: " + data.reason;
         }
-        return "Firm Offer: $" + data.firmOffer + "\\n" +
-          "Range: $" + data.minOffer + " to $" + data.maxOffer + "\\n" +
-          "Confidence: " + data.confidence + "\\n" +
-          "Accept URL: " + data.acceptUrl;
+        return "Offer Price: $" + data.firmOffer;
       }
 
       async function getQuote() {
@@ -232,7 +267,11 @@ function createServer() {
           var result = await window.openai.callTool("submit_vehicle_quote_from_ui", toPayload());
 
           if (result && result.structuredContent && result.structuredContent.ok) {
-            setStatus(formatResult(result.structuredContent));
+            if (result.structuredContent.eligible === false) {
+              setStatus(formatResult(result.structuredContent));
+            } else {
+              renderOffer(result.structuredContent);
+            }
             return;
           }
 
