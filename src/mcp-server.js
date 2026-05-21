@@ -185,17 +185,45 @@ function createServer() {
       function byId(id) { return document.getElementById(id); }
 
       function setStatus(text) {
-        byId("status").textContent = text;
+        var el = byId("status");
+        if (!el) {
+          return;
+        }
+        el.textContent = text;
       }
 
       function renderOffer(data) {
-        var html =
-          "<div class=\"offer-wrap\">" +
-            "<div class=\"offer-label\">Your Instant Offer</div>" +
-            "<div class=\"offer-price\">$" + data.firmOffer + "</div>" +
-            "<a class=\"accept-btn\" href=\"" + data.acceptUrl + "\" target=\"_blank\" rel=\"noopener\">Accept Offer</a>" +
-          "</div>";
-        byId("status").innerHTML = html;
+        var status = byId("status");
+        if (!status) {
+          return;
+        }
+
+        while (status.firstChild) {
+          status.removeChild(status.firstChild);
+        }
+
+        var wrap = document.createElement("div");
+        wrap.className = "offer-wrap";
+
+        var label = document.createElement("div");
+        label.className = "offer-label";
+        label.textContent = "Your Instant Offer";
+
+        var price = document.createElement("div");
+        price.className = "offer-price";
+        price.textContent = "$" + String(data.firmOffer || "");
+
+        var accept = document.createElement("a");
+        accept.className = "accept-btn";
+        accept.textContent = "Accept Offer";
+        accept.target = "_blank";
+        accept.rel = "noopener";
+        accept.href = String(data.acceptUrl || "https://www.cashforcars.com/instaquote/");
+
+        wrap.appendChild(label);
+        wrap.appendChild(price);
+        wrap.appendChild(accept);
+        status.appendChild(wrap);
       }
 
       function prefillFromToolInput() {
@@ -233,14 +261,16 @@ function createServer() {
       }
 
       function toPayload() {
+        var yearVal = byId("year").value;
+        var mileageVal = byId("mileage").value;
         return {
-          year: Number(byId("year").value),
+          year: yearVal ? Number(yearVal) : "",
           make: byId("make").value,
           model: byId("model").value,
           trim: byId("trim").value,
           titleType: byId("titleType").value,
           zipCode: byId("zipCode").value,
-          mileage: Number(byId("mileage").value),
+          mileage: mileageVal ? Number(mileageVal) : "",
           startsDrives: byId("startsDrives").value,
           outstandingLoan: byId("outstandingLoan").value,
           keysAvailable: byId("keysAvailable").value,
@@ -286,8 +316,17 @@ function createServer() {
         }
       }
 
-      byId("quoteBtn").addEventListener("click", getQuote);
-      prefillFromToolInput();
+      (function initWidget() {
+        try {
+          var quoteBtn = byId("quoteBtn");
+          if (quoteBtn) {
+            quoteBtn.addEventListener("click", getQuote);
+          }
+          prefillFromToolInput();
+        } catch (_error) {
+          setStatus("Widget loaded in fallback mode.");
+        }
+      })();
     </script>
   </body>
 </html>`;
