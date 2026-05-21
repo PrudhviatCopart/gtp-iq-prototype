@@ -241,6 +241,94 @@ function createServer() {
           return;
         }
 
+        function parseFromUtterance(utterance) {
+          if (!utterance) {
+            return {};
+          }
+
+          var text = String(utterance);
+          var lower = text.toLowerCase();
+          var parsed = {};
+
+          var yearMatch = lower.match(/\b(19\d{2}|20\d{2})\b/);
+          if (yearMatch) {
+            parsed.year = Number(yearMatch[1]);
+          }
+
+          var mileageMatch = lower.match(/\b(\d{1,3}(?:,\d{3})+|\d{4,6})\b\s*(?:miles|mile|mi|odometer|mileage)?/);
+          if (mileageMatch) {
+            var numeric = mileageMatch[1].replace(/,/g, "");
+            if (numeric.length >= 4) {
+              parsed.mileage = Number(numeric);
+            }
+          }
+
+          var makes = [
+            "acura","audi","bmw","buick","cadillac","chevrolet","chrysler","dodge","ford","gmc","honda","hyundai","infiniti","jeep","kia","lexus","lincoln","mazda","mercedes","mercedes-benz","mini","mitsubishi","nissan","ram","subaru","tesla","toyota","volkswagen","volvo"
+          ];
+          var makeFound = "";
+          for (var m = 0; m < makes.length; m++) {
+            var mk = makes[m];
+            var re = new RegExp("\\b" + mk.replace("-", "[- ]") + "\\b", "i");
+            if (re.test(text)) {
+              makeFound = mk;
+              break;
+            }
+          }
+          if (makeFound) {
+            parsed.make = makeFound === "mercedes-benz" ? "Mercedes-Benz" : (makeFound.charAt(0).toUpperCase() + makeFound.slice(1));
+
+            var modelRegex = new RegExp("\\b" + makeFound.replace("-", "[- ]") + "\\s+([a-z0-9-]{1,20})(?:\\s+([a-z0-9-]{1,20}))?", "i");
+            var modelMatch = text.match(modelRegex);
+            if (modelMatch && modelMatch[1]) {
+              var token1 = modelMatch[1];
+              var token2 = modelMatch[2] || "";
+              var stopWords = ["with", "mileage", "miles", "mile", "odometer", "title", "and", "keys", "loan", "no", "clean", "salvage", "rebuilt"];
+              var token1Lower = token1.toLowerCase();
+              if (stopWords.indexOf(token1Lower) === -1) {
+                parsed.model = token1.toUpperCase() === "A4" ? "A4" : token1.charAt(0).toUpperCase() + token1.slice(1);
+                var token2Lower = token2.toLowerCase();
+                if (token2 && stopWords.indexOf(token2Lower) === -1 && /^(ex|lx|se|le|xle|sport|premium|limited|touring|platinum|s-line|sline)$/i.test(token2)) {
+                  parsed.trim = token2.toUpperCase();
+                }
+              }
+            }
+          }
+
+          if (/\bclean\s+title\b/i.test(text) || /\bclean\b/i.test(text)) {
+            parsed.titleType = "clean";
+          } else if (/\bsalvage\s+title\b/i.test(text) || /\bsalvage\b/i.test(text)) {
+            parsed.titleType = "salvage";
+          } else if (/\brebuilt\s+title\b/i.test(text) || /\brebuilt\b/i.test(text)) {
+            parsed.titleType = "rebuilt";
+          } else if (/\bno\s+title\b/i.test(text)) {
+            parsed.titleType = "no_title";
+          }
+
+          if (/\bno\s+outstanding\s+loan\b/i.test(text) || /\bno\s+loan\b/i.test(text)) {
+            parsed.outstandingLoan = "no";
+          } else if (/\boutstanding\s+loan\b/i.test(text) || /\bhas\s+loan\b/i.test(text)) {
+            parsed.outstandingLoan = "yes";
+          }
+
+          if (/\b(i\s+have\s+)?(my\s+)?keys\b/i.test(text) || /\bkeys\s+available\b/i.test(text)) {
+            parsed.keysAvailable = "yes";
+          } else if (/\bno\s+keys\b/i.test(text) || /\bwithout\s+keys\b/i.test(text) || /\bkeys\s+not\s+available\b/i.test(text)) {
+            parsed.keysAvailable = "no";
+          }
+
+          return parsed;
+        }
+
+        var parsedInput = parseFromUtterance(input.utterance);
+        var mergedInput = {};
+        for (var keyA in input) {
+          mergedInput[keyA] = input[keyA];
+        }
+        for (var keyB in parsedInput) {
+          mergedInput[keyB] = parsedInput[keyB];
+        }
+
         var fields = [
           "year",
           "make",
@@ -258,7 +346,7 @@ function createServer() {
 
         for (var i = 0; i < fields.length; i++) {
           var key = fields[i];
-          var value = input[key];
+          var value = mergedInput[key];
           if (value === undefined || value === null || value === "") {
             continue;
           }
@@ -436,6 +524,7 @@ function createServer() {
       title: "Open Quote Form UI",
       description: "Open an interactive vehicle quote form in chat.",
       inputSchema: {
+        utterance: z.string().min(2).optional(),
         year: z.number().int().min(1980).max(new Date().getFullYear() + 1).optional(),
         make: z.string().min(1).optional(),
         model: z.string().min(1).optional(),
