@@ -60,7 +60,7 @@ function createServer() {
     "quote-form-ui",
     "ui://quote/form.html",
     {
-      mimeType: "text/html;profile=mcp-app",
+      mimeType: "text/html+skybridge",
       description: "Interactive vehicle quote form"
     },
     async () => {
@@ -296,7 +296,7 @@ function createServer() {
         contents: [
           {
             uri: "ui://quote/form.html",
-            mimeType: "text/html;profile=mcp-app",
+            mimeType: "text/html+skybridge",
             text: html,
             _meta: {
               ui: {
