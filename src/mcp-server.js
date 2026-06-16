@@ -185,7 +185,10 @@ function createServer() {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .choice-group.cols-4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .step2-grid {
+        grid-template-columns: 1fr;
       }
       .choice-group .choice-btn {
         margin-top: 0;
@@ -275,6 +278,11 @@ function createServer() {
         .choice-group.cols-3,
         .choice-group.cols-4 {
           grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 980px) and (min-width: 681px) {
+        .choice-group.cols-4 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
       label {
@@ -570,7 +578,7 @@ function createServer() {
         </div>
 
         <div class="step hidden" data-step="2">
-          <div class="grid">
+          <div class="grid step2-grid">
             <div class="field">
               <label for="titleType">What Is Your Title Type?</label>
               <div class="choice-group cols-4" data-field="titleType" role="group" aria-label="What Is Your Title Type?">
