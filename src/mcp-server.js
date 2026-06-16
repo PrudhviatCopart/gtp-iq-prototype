@@ -91,6 +91,44 @@ function createServer() {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
       }
+      .hidden {
+        display: none !important;
+      }
+      .step-header {
+        margin: 4px 0 10px;
+        font-size: 13px;
+        color: #4f6573;
+        font-weight: 600;
+      }
+      .step {
+        margin-top: 4px;
+      }
+      .field {
+        margin-bottom: 2px;
+      }
+      .inline-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      .inline-options label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        margin: 0;
+      }
+      .step-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .btn-secondary {
+        background: #e6eef3;
+        color: #163244;
+      }
       .brand-row {
         display: flex;
         align-items: center;
@@ -120,9 +158,8 @@ function createServer() {
         width: 48%;
       }
       @media (max-width: 680px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
+        .grid { grid-template-columns: 1fr; }
+        .step-actions { flex-direction: column; }
         .brand-left,
         .brand-right {
           width: 48%;
@@ -310,27 +347,69 @@ function createServer() {
             </svg>
           </div>
         </div>
-        <h3>Instant Vehicle Quote</h3>
-        <div class="grid">
-          <div><label for="year">Year</label><input id="year" value="" /></div>
-          <div><label for="make">Make</label><input id="make" value="" /></div>
-          <div><label for="model">Model</label><input id="model" value="" /></div>
-          <div><label for="trim">Trim</label><input id="trim" value="" /></div>
-          <div><label for="titleType">Title Type</label><select id="titleType"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select></div>
-          <div><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
-          <div><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
-          <div><label for="startsDrives">Starts and Drives</label><select id="startsDrives"><option value="" selected>Select</option><option>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select></div>
-          <div><label for="outstandingLoan">Outstanding Loan</label><select id="outstandingLoan"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
-          <div><label for="keysAvailable">Keys Available</label><select id="keysAvailable"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
-          <div><label for="hasDamage">Any Damage</label><select id="hasDamage"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
-          <div><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
+        <div id="stepHeader" class="step-header">Step 1 of 5</div>
+
+        <div class="step" data-step="1">
+          <div class="grid">
+            <div class="field"><label for="year">Year</label><input id="year" value="" /></div>
+            <div class="field"><label for="make">Make</label><input id="make" value="" /></div>
+            <div class="field"><label for="model">Model</label><input id="model" value="" /></div>
+            <div class="field"><label for="trim">Trim</label><input id="trim" value="" /></div>
+          </div>
         </div>
-        <button id="quoteBtn">Get Quote</button>
+
+        <div class="step hidden" data-step="2">
+          <div class="grid">
+            <div class="field"><label for="titleType">Title Type</label><select id="titleType"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select></div>
+            <div class="field"><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
+            <div class="field"><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
+            <div class="field"><label for="keysAvailable">Keys Available</label><select id="keysAvailable"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+          </div>
+        </div>
+
+        <div class="step hidden" data-step="3">
+          <div class="grid">
+            <div class="field"><label for="startsDrives">Starts and Drives</label><select id="startsDrives"><option value="" selected>Select</option><option>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select></div>
+            <div id="missingPartsWrap" class="field hidden"><label for="missingReplacedParts">Any missing or replaced parts?</label><select id="missingReplacedParts"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+          </div>
+        </div>
+
+        <div class="step hidden" data-step="4">
+          <div class="grid">
+            <div class="field"><label for="hasDamage">Damage</label><select id="hasDamage"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+            <div id="mechanicalDamageWrap" class="field hidden"><label for="mechanicalDamage">Mechanical Damage?</label><select id="mechanicalDamage"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+          </div>
+          <div id="damageAreaWrap" class="field hidden">
+            <label>Damage area? (select all that apply)</label>
+            <div class="inline-options">
+              <label><input type="checkbox" id="damageAreaTop" value="Top" /> Top</label>
+              <label><input type="checkbox" id="damageAreaFront" value="Front" /> Front</label>
+              <label><input type="checkbox" id="damageAreaRear" value="Rear" /> Rear</label>
+              <label><input type="checkbox" id="damageAreaSide" value="Side" /> Side</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="step hidden" data-step="5">
+          <div class="grid">
+            <div class="field"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
+          </div>
+        </div>
+
+        <select id="outstandingLoan" class="hidden"><option value="no" selected>no</option><option>yes</option></select>
+
+        <div class="step-actions">
+          <button id="prevBtn" type="button" class="btn-secondary hidden">Back</button>
+          <button id="nextBtn" type="button">Next</button>
+          <button id="quoteBtn" type="button" class="hidden">Get Quote</button>
+        </div>
         <div id="status">Ready.</div>
       </div>
     </div>
     <script>
       function byId(id) { return document.getElementById(id); }
+      var currentStep = 1;
+      var totalSteps = 5;
 
       function setStatus(text) {
         var el = byId("status");
@@ -456,6 +535,20 @@ function createServer() {
             parsed.keysAvailable = "no";
           }
 
+          if (/\bstarts?\s+but\s+does\s+not\s+drive\b/i.test(text) || /\bstarts?_no_drive\b/i.test(text)) {
+            parsed.startsDrives = "starts_no_drive";
+          } else if (/\bdoes\s+not\s+start\b/i.test(text) || /\bno\s+start\b/i.test(text) || /\bno_start\b/i.test(text)) {
+            parsed.startsDrives = "no_start";
+          } else if (/\bstarts?\s+and\s+drives?\b/i.test(text)) {
+            parsed.startsDrives = "starts_and_drives";
+          }
+
+          if (/\bno\s+damage\b/i.test(text)) {
+            parsed.hasDamage = "no";
+          } else if (/\bdamage\b/i.test(text)) {
+            parsed.hasDamage = "yes";
+          }
+
           return parsed;
         }
 
@@ -494,6 +587,52 @@ function createServer() {
             el.value = String(value);
           }
         }
+
+        if (Array.isArray(mergedInput.damageArea)) {
+          byId("damageAreaTop").checked = mergedInput.damageArea.indexOf("Top") >= 0;
+          byId("damageAreaFront").checked = mergedInput.damageArea.indexOf("Front") >= 0;
+          byId("damageAreaRear").checked = mergedInput.damageArea.indexOf("Rear") >= 0;
+          byId("damageAreaSide").checked = mergedInput.damageArea.indexOf("Side") >= 0;
+        }
+
+        updateConditionalFields();
+      }
+
+      function updateConditionalFields() {
+        var startsDrives = byId("startsDrives").value;
+        var hasDamage = byId("hasDamage").value;
+
+        var missingPartsWrap = byId("missingPartsWrap");
+        if (startsDrives === "starts_no_drive" || startsDrives === "no_start") {
+          missingPartsWrap.classList.remove("hidden");
+        } else {
+          missingPartsWrap.classList.add("hidden");
+          byId("missingReplacedParts").value = "";
+          clearFieldError(byId("missingReplacedParts"));
+        }
+
+        var damageAreaWrap = byId("damageAreaWrap");
+        var mechanicalDamageWrap = byId("mechanicalDamageWrap");
+        if (hasDamage === "yes") {
+          damageAreaWrap.classList.remove("hidden");
+          mechanicalDamageWrap.classList.add("hidden");
+          byId("mechanicalDamage").value = "";
+          clearFieldError(byId("mechanicalDamage"));
+        } else if (hasDamage === "no") {
+          mechanicalDamageWrap.classList.remove("hidden");
+          damageAreaWrap.classList.add("hidden");
+          byId("damageAreaTop").checked = false;
+          byId("damageAreaFront").checked = false;
+          byId("damageAreaRear").checked = false;
+          byId("damageAreaSide").checked = false;
+          var oldDamageAreaError = byId("damageArea-error");
+          if (oldDamageAreaError && oldDamageAreaError.parentNode) {
+            oldDamageAreaError.parentNode.removeChild(oldDamageAreaError);
+          }
+        } else {
+          damageAreaWrap.classList.add("hidden");
+          mechanicalDamageWrap.classList.add("hidden");
+        }
       }
 
       function clearFieldError(el) {
@@ -527,20 +666,15 @@ function createServer() {
       }
 
       function validateRequiredFields() {
-        var requiredIds = [
-          "year",
-          "make",
-          "model",
-          "trim",
-          "titleType",
-          "zipCode",
-          "mileage",
-          "startsDrives",
-          "outstandingLoan",
-          "keysAvailable",
-          "hasDamage",
-          "phoneNumber"
-        ];
+        var requiredByStep = {
+          1: ["year", "make", "model", "trim"],
+          2: ["titleType", "zipCode", "mileage", "keysAvailable"],
+          3: ["startsDrives"],
+          4: ["hasDamage"],
+          5: ["phoneNumber"]
+        };
+
+        var requiredIds = requiredByStep[currentStep] || [];
 
         var hasError = false;
         for (var i = 0; i < requiredIds.length; i++) {
@@ -555,8 +689,40 @@ function createServer() {
           }
         }
 
+        if (currentStep === 3) {
+          var startsDrives = byId("startsDrives").value;
+          if ((startsDrives === "starts_no_drive" || startsDrives === "no_start") && !String(byId("missingReplacedParts").value || "").trim()) {
+            setFieldError(byId("missingReplacedParts"), "This field is required.");
+            hasError = true;
+          }
+        }
+
+        if (currentStep === 4) {
+          var hasDamage = byId("hasDamage").value;
+          if (hasDamage === "yes") {
+            var anySelected = byId("damageAreaTop").checked || byId("damageAreaFront").checked || byId("damageAreaRear").checked || byId("damageAreaSide").checked;
+            var oldDamageAreaError = byId("damageArea-error");
+            if (oldDamageAreaError && oldDamageAreaError.parentNode) {
+              oldDamageAreaError.parentNode.removeChild(oldDamageAreaError);
+            }
+            if (!anySelected) {
+              var damageAreaError = document.createElement("div");
+              damageAreaError.id = "damageArea-error";
+              damageAreaError.className = "field-error";
+              damageAreaError.textContent = "Select at least one damage area.";
+              byId("damageAreaWrap").appendChild(damageAreaError);
+              hasError = true;
+            }
+          } else if (hasDamage === "no") {
+            if (!String(byId("mechanicalDamage").value || "").trim()) {
+              setFieldError(byId("mechanicalDamage"), "This field is required.");
+              hasError = true;
+            }
+          }
+        }
+
         if (hasError) {
-          setStatus("Please fill all required fields.");
+          setStatus("Please fill all required fields in this step.");
           return false;
         }
 
@@ -566,6 +732,11 @@ function createServer() {
       function toPayload() {
         var yearVal = byId("year").value;
         var mileageVal = byId("mileage").value;
+        var damageAreas = [];
+        if (byId("damageAreaTop").checked) { damageAreas.push("Top"); }
+        if (byId("damageAreaFront").checked) { damageAreas.push("Front"); }
+        if (byId("damageAreaRear").checked) { damageAreas.push("Rear"); }
+        if (byId("damageAreaSide").checked) { damageAreas.push("Side"); }
         return {
           year: yearVal ? Number(yearVal) : "",
           make: byId("make").value,
@@ -575,11 +746,51 @@ function createServer() {
           zipCode: byId("zipCode").value,
           mileage: mileageVal ? Number(mileageVal) : "",
           startsDrives: byId("startsDrives").value,
+          missingReplacedParts: byId("missingReplacedParts").value,
           outstandingLoan: byId("outstandingLoan").value,
           keysAvailable: byId("keysAvailable").value,
           hasDamage: byId("hasDamage").value,
+          damageArea: damageAreas,
+          mechanicalDamage: byId("mechanicalDamage").value,
           phoneNumber: byId("phoneNumber").value
         };
+      }
+
+      function renderStep() {
+        var steps = document.querySelectorAll(".step");
+        for (var i = 0; i < steps.length; i++) {
+          var stepNum = Number(steps[i].getAttribute("data-step"));
+          if (stepNum === currentStep) {
+            steps[i].classList.remove("hidden");
+          } else {
+            steps[i].classList.add("hidden");
+          }
+        }
+
+        byId("stepHeader").textContent = "Step " + currentStep + " of " + totalSteps;
+        byId("prevBtn").classList.toggle("hidden", currentStep === 1);
+        byId("nextBtn").classList.toggle("hidden", currentStep === totalSteps);
+        byId("quoteBtn").classList.toggle("hidden", currentStep !== totalSteps);
+      }
+
+      function goNext() {
+        updateConditionalFields();
+        if (!validateRequiredFields()) {
+          return;
+        }
+        if (currentStep < totalSteps) {
+          currentStep += 1;
+          renderStep();
+          setStatus("Step " + currentStep + " ready.");
+        }
+      }
+
+      function goPrev() {
+        if (currentStep > 1) {
+          currentStep -= 1;
+          renderStep();
+          setStatus("Step " + currentStep + " ready.");
+        }
       }
 
       function formatResult(data) {
@@ -596,6 +807,9 @@ function createServer() {
             return;
           }
 
+          currentStep = totalSteps;
+          renderStep();
+          updateConditionalFields();
           if (!validateRequiredFields()) {
             return;
           }
@@ -626,10 +840,22 @@ function createServer() {
       (function initWidget() {
         try {
           var quoteBtn = byId("quoteBtn");
+          var prevBtn = byId("prevBtn");
+          var nextBtn = byId("nextBtn");
           if (quoteBtn) {
             quoteBtn.addEventListener("click", getQuote);
           }
+          if (prevBtn) {
+            prevBtn.addEventListener("click", goPrev);
+          }
+          if (nextBtn) {
+            nextBtn.addEventListener("click", goNext);
+          }
+          byId("startsDrives").addEventListener("change", updateConditionalFields);
+          byId("hasDamage").addEventListener("change", updateConditionalFields);
           prefillFromToolInput();
+          renderStep();
+          updateConditionalFields();
         } catch (_error) {
           setStatus("Widget loaded in fallback mode.");
         }
@@ -672,9 +898,12 @@ function createServer() {
         zipCode: z.string().regex(/^[0-9]{5}$/).optional(),
         mileage: z.number().int().min(0).max(500000).optional(),
         startsDrives: z.enum(["starts_and_drives", "starts_no_drive", "no_start"]).optional(),
+        missingReplacedParts: z.enum(["yes", "no"]).optional(),
         outstandingLoan: z.enum(["yes", "no"]).optional(),
         keysAvailable: z.enum(["yes", "no"]).optional(),
         hasDamage: z.enum(["yes", "no"]).optional(),
+        damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
+        mechanicalDamage: z.enum(["yes", "no"]).optional(),
         phoneNumber: z.string().min(10).optional()
       },
       _meta: {
@@ -709,9 +938,12 @@ function createServer() {
         zipCode: z.string().regex(/^[0-9]{5}$/),
         mileage: z.number().int().min(0).max(500000),
         startsDrives: z.enum(["starts_and_drives", "starts_no_drive", "no_start"]),
+        missingReplacedParts: z.enum(["yes", "no"]).optional(),
         outstandingLoan: z.enum(["yes", "no"]),
         keysAvailable: z.enum(["yes", "no"]),
         hasDamage: z.enum(["yes", "no"]),
+        damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
+        mechanicalDamage: z.enum(["yes", "no"]).optional(),
         phoneNumber: z.string().min(10)
       }
     },
@@ -745,9 +977,12 @@ function createServer() {
         zipCode: z.string().regex(/^[0-9]{5}$/),
         mileage: z.number().int().min(0).max(500000),
         startsDrives: z.enum(["starts_and_drives", "starts_no_drive", "no_start"]),
+        missingReplacedParts: z.enum(["yes", "no"]).optional(),
         outstandingLoan: z.enum(["yes", "no"]),
         keysAvailable: z.enum(["yes", "no"]),
         hasDamage: z.enum(["yes", "no"]),
+        damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
+        mechanicalDamage: z.enum(["yes", "no"]).optional(),
         phoneNumber: z.string().min(10)
       },
       _meta: {
