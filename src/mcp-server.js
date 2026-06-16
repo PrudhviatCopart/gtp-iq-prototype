@@ -147,12 +147,22 @@ function createServer() {
         gap: 8px;
         margin-top: 2px;
       }
+      .choice-group.cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .choice-group.cols-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
       .choice-group .choice-btn {
         margin-top: 0;
         border: 1px solid #bfd0d8;
         background: #eef4f7;
         color: #163244;
         font-weight: 700;
+      }
+      .choice-group .choice-btn.small-text {
+        font-size: 12px;
+        line-height: 1.2;
       }
       .choice-group .choice-btn.selected {
         background: #0f766e;
@@ -206,6 +216,10 @@ function createServer() {
         .brand-left,
         .brand-right {
           width: 48%;
+        }
+        .choice-group.cols-3,
+        .choice-group.cols-4 {
+          grid-template-columns: 1fr;
         }
       }
       label {
@@ -292,7 +306,7 @@ function createServer() {
       .zone-top {
         left: 110px;
         top: 105px;
-        width: 65px;
+        width: 70px;
         height: 160px;
       }
       .zone-side-left {
@@ -498,17 +512,48 @@ function createServer() {
 
         <div class="step hidden" data-step="2">
           <div class="grid">
-            <div class="field"><label for="titleType">Title Type</label><select id="titleType"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select></div>
+            <div class="field">
+              <label for="titleType">Title Type</label>
+              <div class="choice-group cols-4" data-field="titleType" role="group" aria-label="Title Type">
+                <button type="button" class="choice-btn" data-value="clean" aria-pressed="false">Clean</button>
+                <button type="button" class="choice-btn" data-value="salvage" aria-pressed="false">Salvage</button>
+                <button type="button" class="choice-btn" data-value="rebuilt" aria-pressed="false">Rebuilt</button>
+                <button type="button" class="choice-btn" data-value="no_title" aria-pressed="false">No Title</button>
+              </div>
+              <select id="titleType" class="hidden"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select>
+            </div>
             <div class="field"><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
             <div class="field"><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
-            <div class="field"><label for="keysAvailable">Keys Available</label><select id="keysAvailable"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+            <div class="field">
+              <label for="keysAvailable">Keys Available</label>
+              <div class="choice-group" data-field="keysAvailable" role="group" aria-label="Keys Available">
+                <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+                <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+              </div>
+              <select id="keysAvailable" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+            </div>
           </div>
         </div>
 
         <div class="step hidden" data-step="3">
           <div class="grid">
-            <div class="field"><label for="startsDrives">Starts and Drives</label><select id="startsDrives"><option value="" selected>Select</option><option>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select></div>
-            <div id="missingPartsWrap" class="field hidden"><label for="missingReplacedParts">Any missing or replaced parts?</label><select id="missingReplacedParts"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+            <div class="field">
+              <label for="startsDrives">Starts and Drives</label>
+              <div class="choice-group cols-3" data-field="startsDrives" role="group" aria-label="Starts and Drives">
+                <button type="button" class="choice-btn small-text" data-value="starts_and_drives" aria-pressed="false">Starts and Drives</button>
+                <button type="button" class="choice-btn small-text" data-value="starts_no_drive" aria-pressed="false">Starts, No Drive</button>
+                <button type="button" class="choice-btn small-text" data-value="no_start" aria-pressed="false">No Start</button>
+              </div>
+              <select id="startsDrives" class="hidden"><option value="" selected>Select</option><option>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select>
+            </div>
+          </div>
+          <div id="missingPartsWrap" class="field hidden">
+            <label for="missingReplacedParts">Any missing or replaced parts?</label>
+            <div class="choice-group" data-field="missingReplacedParts" role="group" aria-label="Missing or replaced parts">
+              <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+              <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+            </div>
+            <select id="missingReplacedParts" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
           </div>
         </div>
 
@@ -522,14 +567,14 @@ function createServer() {
               </div>
               <select id="hasDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
             </div>
-            <div id="mechanicalDamageWrap" class="field hidden">
-              <label for="mechanicalDamage">Mechanical Damage?</label>
-              <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Mechanical Damage">
-                <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
-                <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
-              </div>
-              <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+          </div>
+          <div id="mechanicalDamageWrap" class="field hidden">
+            <label for="mechanicalDamage">Mechanical Damage?</label>
+            <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Mechanical Damage">
+              <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+              <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
             </div>
+            <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
           </div>
           <div id="damageAreaWrap" class="field hidden">
             <label>Damage area? (select all that apply)</label>
@@ -797,6 +842,7 @@ function createServer() {
         } else {
           missingPartsWrap.classList.add("hidden");
           byId("missingReplacedParts").value = "";
+          syncChoiceButtons("missingReplacedParts");
           clearFieldError(byId("missingReplacedParts"));
         }
 
@@ -1162,11 +1208,19 @@ function createServer() {
           byId("startsDrives").addEventListener("change", updateConditionalFields);
           byId("hasDamage").addEventListener("change", updateConditionalFields);
 
+          syncChoiceButtons("titleType");
+          syncChoiceButtons("keysAvailable");
+          syncChoiceButtons("startsDrives");
+          syncChoiceButtons("missingReplacedParts");
           syncChoiceButtons("hasDamage");
           syncChoiceButtons("mechanicalDamage");
 
           prefillFromToolInput();
 
+          syncChoiceButtons("titleType");
+          syncChoiceButtons("keysAvailable");
+          syncChoiceButtons("startsDrives");
+          syncChoiceButtons("missingReplacedParts");
           syncChoiceButtons("hasDamage");
           syncChoiceButtons("mechanicalDamage");
 
