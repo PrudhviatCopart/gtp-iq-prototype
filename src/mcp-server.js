@@ -1,6 +1,4 @@
 import { randomUUID } from "node:crypto";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import * as z from "zod/v4";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -21,8 +19,6 @@ const allowedHosts = String(process.env.MCP_ALLOWED_HOSTS || "")
   .filter(Boolean);
 
 const transports = {};
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function requestQuote(args) {
   const response = await fetch(`${quoteApiBaseUrl}/api/quote`, {
@@ -1269,10 +1265,6 @@ const app = createMcpExpressApp(
     ? { host: "0.0.0.0", allowedHosts }
     : { host: "0.0.0.0" }
 );
-
-app.get("/assets/damaged-areas.png", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "public", "damaged-areas.png"));
-});
 
 app.post("/mcp", async (req, res) => {
   try {
