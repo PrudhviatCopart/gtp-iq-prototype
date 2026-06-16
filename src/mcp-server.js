@@ -95,7 +95,7 @@ function createServer() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 4%;
         margin-bottom: 12px;
         padding: 10px;
         border: 1px solid #d7e2e7;
@@ -114,22 +114,18 @@ function createServer() {
         display: block;
       }
       .brand-left {
-        width: 200px;
+        width: 48%;
       }
       .brand-right {
-        width: 160px;
+        width: 48%;
       }
       @media (max-width: 680px) {
         .grid {
           grid-template-columns: 1fr;
         }
-        .brand-row {
-          flex-direction: column;
-          align-items: flex-start;
-        }
         .brand-left,
         .brand-right {
-          width: 100%;
+          width: 48%;
         }
       }
       label {
