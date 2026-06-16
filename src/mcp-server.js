@@ -127,6 +127,12 @@ function createServer() {
       .field {
         margin-bottom: 2px;
       }
+      .field.full-width {
+        grid-column: 1 / -1;
+      }
+      .dynamic-followup {
+        margin-top: 14px;
+      }
       .inline-options {
         display: flex;
         flex-wrap: wrap;
@@ -216,6 +222,9 @@ function createServer() {
         .brand-left,
         .brand-right {
           width: 48%;
+        }
+        .field.full-width {
+          grid-column: auto;
         }
         .choice-group.cols-3,
         .choice-group.cols-4 {
@@ -495,10 +504,10 @@ function createServer() {
             </svg>
           </div>
         </div>
-        <div id="stepHeader" class="step-header">Step 1 of 5</div>
+        <div id="stepHeader" class="step-header">Step 1 of 6</div>
         <div class="progress-wrap" aria-label="Form progress">
-          <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
-          <div id="progressText" class="progress-text">20% complete</div>
+          <div class="progress-track"><div id="progressFill" class="progress-fill" style="width: 17%;"></div></div>
+          <div id="progressText" class="progress-text">17% complete</div>
         </div>
 
         <div class="step" data-step="1">
@@ -522,8 +531,6 @@ function createServer() {
               </div>
               <select id="titleType" class="hidden"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select>
             </div>
-            <div class="field"><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
-            <div class="field"><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
             <div class="field">
               <label for="keysAvailable">Keys Available</label>
               <div class="choice-group" data-field="keysAvailable" role="group" aria-label="Keys Available">
@@ -537,17 +544,24 @@ function createServer() {
 
         <div class="step hidden" data-step="3">
           <div class="grid">
-            <div class="field">
+            <div class="field"><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
+            <div class="field"><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
+          </div>
+        </div>
+
+        <div class="step hidden" data-step="4">
+          <div class="grid">
+            <div class="field full-width">
               <label for="startsDrives">Starts and Drives</label>
               <div class="choice-group cols-3" data-field="startsDrives" role="group" aria-label="Starts and Drives">
-                <button type="button" class="choice-btn small-text" data-value="starts_and_drives" aria-pressed="false">Starts and Drives</button>
-                <button type="button" class="choice-btn small-text" data-value="starts_no_drive" aria-pressed="false">Starts, No Drive</button>
-                <button type="button" class="choice-btn small-text" data-value="no_start" aria-pressed="false">No Start</button>
+                <button type="button" class="choice-btn small-text" data-value="starts_and_drives" aria-pressed="false">Starts And Drives</button>
+                <button type="button" class="choice-btn small-text" data-value="starts_no_drive" aria-pressed="false">Starts But Does Not Drive</button>
+                <button type="button" class="choice-btn small-text" data-value="no_start" aria-pressed="false">Does Not Start</button>
               </div>
               <select id="startsDrives" class="hidden"><option value="" selected>Select</option><option>starts_and_drives</option><option>starts_no_drive</option><option>no_start</option></select>
             </div>
           </div>
-          <div id="missingPartsWrap" class="field hidden">
+          <div id="missingPartsWrap" class="field dynamic-followup hidden">
             <label for="missingReplacedParts">Any missing or replaced parts?</label>
             <div class="choice-group" data-field="missingReplacedParts" role="group" aria-label="Missing or replaced parts">
               <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
@@ -557,7 +571,7 @@ function createServer() {
           </div>
         </div>
 
-        <div class="step hidden" data-step="4">
+        <div class="step hidden" data-step="5">
           <div class="grid">
             <div class="field">
               <label for="hasDamage">Damage</label>
@@ -568,7 +582,7 @@ function createServer() {
               <select id="hasDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
             </div>
           </div>
-          <div id="mechanicalDamageWrap" class="field hidden">
+          <div id="mechanicalDamageWrap" class="field dynamic-followup hidden">
             <label for="mechanicalDamage">Mechanical Damage?</label>
             <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Mechanical Damage">
               <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
@@ -589,7 +603,7 @@ function createServer() {
           </div>
         </div>
 
-        <div class="step hidden" data-step="5">
+        <div class="step hidden" data-step="6">
           <div class="grid">
             <div class="field"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
           </div>
@@ -608,7 +622,7 @@ function createServer() {
     <script>
       function byId(id) { return document.getElementById(id); }
       var currentStep = 1;
-      var totalSteps = 5;
+      var totalSteps = 6;
       var fullOfferMode = false;
 
       function setStatus(text) {
@@ -1002,10 +1016,11 @@ function createServer() {
       function validateRequiredFields() {
         var requiredByStep = {
           1: ["year", "make", "model", "trim"],
-          2: ["titleType", "zipCode", "mileage", "keysAvailable"],
-          3: ["startsDrives"],
-          4: ["hasDamage"],
-          5: ["phoneNumber"]
+          2: ["titleType", "keysAvailable"],
+          3: ["zipCode", "mileage"],
+          4: ["startsDrives"],
+          5: ["hasDamage"],
+          6: ["phoneNumber"]
         };
 
         var requiredIds = requiredByStep[currentStep] || [];
@@ -1023,7 +1038,7 @@ function createServer() {
           }
         }
 
-        if (currentStep === 3) {
+        if (currentStep === 4) {
           var startsDrives = byId("startsDrives").value;
           if ((startsDrives === "starts_no_drive" || startsDrives === "no_start") && !String(byId("missingReplacedParts").value || "").trim()) {
             setFieldError(byId("missingReplacedParts"), "This field is required.");
@@ -1031,7 +1046,7 @@ function createServer() {
           }
         }
 
-        if (currentStep === 4) {
+        if (currentStep === 5) {
           var hasDamage = byId("hasDamage").value;
           if (hasDamage === "yes") {
             var anySelected = getDamageAreas().length > 0;
