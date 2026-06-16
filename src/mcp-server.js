@@ -224,6 +224,104 @@ function createServer() {
         padding: 12px;
       }
       .offer-label {
+        font-size: 12px;
+        color: #4c6777;
+        margin-bottom: 6px;
+      }
+      .damage-map {
+        position: relative;
+        width: min(100%, 300px);
+        height: 360px;
+        margin: 8px auto 0;
+        background: #eef1f3;
+        border-radius: 12px;
+      }
+      .car-silhouette {
+        position: absolute;
+        left: 50%;
+        top: 57%;
+        transform: translate(-50%, -50%);
+        width: 112px;
+        height: 236px;
+        border-radius: 56px;
+        border: 2px solid #b7c0c7;
+        background: linear-gradient(180deg, #d9dee2 0%, #c6cdd3 55%, #d3d9de 100%);
+        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.18);
+      }
+      .car-silhouette::before {
+        content: "";
+        position: absolute;
+        left: 22px;
+        right: 22px;
+        top: 48px;
+        bottom: 48px;
+        border-radius: 20px;
+        background: #9aa4ac;
+      }
+      .car-silhouette::after {
+        content: "";
+        position: absolute;
+        left: 32px;
+        right: 32px;
+        top: 76px;
+        bottom: 76px;
+        border-radius: 8px;
+        background: #e8edf0;
+      }
+      .damage-zone {
+        position: absolute;
+        border: 2px dashed #0e9b87;
+        border-radius: 10px;
+        background: rgba(172, 186, 121, 0.34);
+        color: #21414d;
+        font-size: 11px;
+        font-weight: 700;
+        text-align: center;
+        cursor: pointer;
+      }
+      .damage-zone:hover {
+        background: rgba(152, 178, 89, 0.42);
+      }
+      .damage-zone.selected {
+        background: rgba(43, 160, 118, 0.34);
+        border-color: #0a7f6f;
+      }
+      .zone-top {
+        left: 56px;
+        top: 22px;
+        width: 188px;
+        height: 76px;
+      }
+      .zone-front {
+        left: 52px;
+        bottom: 26px;
+        width: 196px;
+        height: 46px;
+      }
+      .zone-rear {
+        left: 104px;
+        top: 84px;
+        width: 92px;
+        height: 236px;
+      }
+      .zone-side-left {
+        left: 26px;
+        top: 106px;
+        width: 84px;
+        height: 192px;
+      }
+      .zone-side-right {
+        right: 26px;
+        top: 106px;
+        width: 84px;
+        height: 192px;
+      }
+      .damage-hint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #4f6573;
+        text-align: center;
+      }
       .full-offer-mode {
         position: fixed;
         inset: 0;
@@ -251,10 +349,6 @@ function createServer() {
       .full-offer-mode .accept-btn {
         font-size: 17px;
         padding: 13px 16px;
-      }
-        font-size: 12px;
-        color: #4c6777;
-        margin-bottom: 6px;
       }
       .offer-price {
         font-size: 32px;
@@ -434,12 +528,15 @@ function createServer() {
           </div>
           <div id="damageAreaWrap" class="field hidden">
             <label>Damage area? (select all that apply)</label>
-            <div class="inline-options">
-              <label><input type="checkbox" id="damageAreaTop" value="Top" /> Top</label>
-              <label><input type="checkbox" id="damageAreaFront" value="Front" /> Front</label>
-              <label><input type="checkbox" id="damageAreaRear" value="Rear" /> Rear</label>
-              <label><input type="checkbox" id="damageAreaSide" value="Side" /> Side</label>
+            <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
+              <div class="car-silhouette" aria-hidden="true"></div>
+              <button type="button" class="damage-zone zone-top" data-zone="Top">Top</button>
+              <button type="button" class="damage-zone zone-front" data-zone="Front">Front</button>
+              <button type="button" class="damage-zone zone-rear" data-zone="Rear">Rear</button>
+              <button type="button" class="damage-zone zone-side-left" data-zone="Side">Side</button>
+              <button type="button" class="damage-zone zone-side-right" data-zone="Side">Side</button>
             </div>
+            <div class="damage-hint">Tap the highlighted zones to mark damaged areas.</div>
           </div>
         </div>
 
@@ -680,10 +777,7 @@ function createServer() {
         }
 
         if (Array.isArray(mergedInput.damageArea)) {
-          byId("damageAreaTop").checked = mergedInput.damageArea.indexOf("Top") >= 0;
-          byId("damageAreaFront").checked = mergedInput.damageArea.indexOf("Front") >= 0;
-          byId("damageAreaRear").checked = mergedInput.damageArea.indexOf("Rear") >= 0;
-          byId("damageAreaSide").checked = mergedInput.damageArea.indexOf("Side") >= 0;
+          setDamageAreas(mergedInput.damageArea);
         }
 
         updateConditionalFields();
@@ -712,10 +806,7 @@ function createServer() {
         } else if (hasDamage === "no") {
           mechanicalDamageWrap.classList.remove("hidden");
           damageAreaWrap.classList.add("hidden");
-          byId("damageAreaTop").checked = false;
-          byId("damageAreaFront").checked = false;
-          byId("damageAreaRear").checked = false;
-          byId("damageAreaSide").checked = false;
+          clearDamageAreas();
           var oldDamageAreaError = byId("damageArea-error");
           if (oldDamageAreaError && oldDamageAreaError.parentNode) {
             oldDamageAreaError.parentNode.removeChild(oldDamageAreaError);
@@ -756,6 +847,63 @@ function createServer() {
         el.parentNode.appendChild(errorEl);
       }
 
+      function getDamageButtons() {
+        return document.querySelectorAll("#damageMap .damage-zone");
+      }
+
+      function clearDamageAreas() {
+        var buttons = getDamageButtons();
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].classList.remove("selected");
+          buttons[i].setAttribute("aria-pressed", "false");
+        }
+      }
+
+      function setDamageAreas(areas) {
+        clearDamageAreas();
+        if (!Array.isArray(areas)) {
+          return;
+        }
+        var wanted = {};
+        for (var i = 0; i < areas.length; i++) {
+          wanted[String(areas[i])] = true;
+        }
+        var buttons = getDamageButtons();
+        for (var j = 0; j < buttons.length; j++) {
+          var zone = buttons[j].getAttribute("data-zone");
+          if (wanted[zone]) {
+            buttons[j].classList.add("selected");
+            buttons[j].setAttribute("aria-pressed", "true");
+          }
+        }
+      }
+
+      function getDamageAreas() {
+        var buttons = getDamageButtons();
+        var map = {};
+        for (var i = 0; i < buttons.length; i++) {
+          if (buttons[i].classList.contains("selected")) {
+            map[buttons[i].getAttribute("data-zone")] = true;
+          }
+        }
+        return Object.keys(map);
+      }
+
+      function toggleDamageArea(event) {
+        var btn = event.currentTarget;
+        if (!btn) {
+          return;
+        }
+        var isSelected = btn.classList.contains("selected");
+        btn.classList.toggle("selected", !isSelected);
+        btn.setAttribute("aria-pressed", isSelected ? "false" : "true");
+
+        var oldDamageAreaError = byId("damageArea-error");
+        if (oldDamageAreaError && oldDamageAreaError.parentNode) {
+          oldDamageAreaError.parentNode.removeChild(oldDamageAreaError);
+        }
+      }
+
       function validateRequiredFields() {
         var requiredByStep = {
           1: ["year", "make", "model", "trim"],
@@ -791,7 +939,7 @@ function createServer() {
         if (currentStep === 4) {
           var hasDamage = byId("hasDamage").value;
           if (hasDamage === "yes") {
-            var anySelected = byId("damageAreaTop").checked || byId("damageAreaFront").checked || byId("damageAreaRear").checked || byId("damageAreaSide").checked;
+            var anySelected = getDamageAreas().length > 0;
             var oldDamageAreaError = byId("damageArea-error");
             if (oldDamageAreaError && oldDamageAreaError.parentNode) {
               oldDamageAreaError.parentNode.removeChild(oldDamageAreaError);
@@ -823,11 +971,7 @@ function createServer() {
       function toPayload() {
         var yearVal = byId("year").value;
         var mileageVal = byId("mileage").value;
-        var damageAreas = [];
-        if (byId("damageAreaTop").checked) { damageAreas.push("Top"); }
-        if (byId("damageAreaFront").checked) { damageAreas.push("Front"); }
-        if (byId("damageAreaRear").checked) { damageAreas.push("Rear"); }
-        if (byId("damageAreaSide").checked) { damageAreas.push("Side"); }
+        var damageAreas = getDamageAreas();
         return {
           year: yearVal ? Number(yearVal) : "",
           make: byId("make").value,
@@ -954,6 +1098,11 @@ function createServer() {
           }
           if (nextBtn) {
             nextBtn.addEventListener("click", goNext);
+          }
+          var damageButtons = getDamageButtons();
+          for (var i = 0; i < damageButtons.length; i++) {
+            damageButtons[i].setAttribute("aria-pressed", "false");
+            damageButtons[i].addEventListener("click", toggleDamageArea);
           }
           byId("startsDrives").addEventListener("change", updateConditionalFields);
           byId("hasDamage").addEventListener("change", updateConditionalFields);
