@@ -200,11 +200,11 @@ function createServer() {
         line-height: 1.2;
       }
       .choice-group .choice-btn.selected {
-        background: #eef4f7;
-        border-width: 2px;
-        border-color: #0f766e;
+        background: #f8fcff;
+        border-width: 3px;
+        border-color: #0a7f6f;
         color: #0b4e69;
-        box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.18);
+        box-shadow: 0 0 0 1px rgba(10, 127, 111, 0.14);
       }
       .choice-group.input-error .choice-btn {
         border-color: #cf2e2e;
@@ -215,6 +215,10 @@ function createServer() {
         gap: 8px;
         margin-top: 12px;
         justify-content: flex-end;
+      }
+      .step-actions button {
+        width: 48%;
+        margin-top: 0;
       }
       .btn-secondary {
         background: #e6eef3;
@@ -251,6 +255,7 @@ function createServer() {
       @media (max-width: 680px) {
         .grid { grid-template-columns: 1fr; }
         .step-actions { flex-direction: column; }
+        .step-actions button { width: 100%; }
         .brand-left,
         .brand-right {
           width: 48%;
@@ -584,6 +589,14 @@ function createServer() {
               </div>
               <select id="keysAvailable" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
             </div>
+            <div class="field">
+              <label for="outstandingLoan">Do You Have Outstanding Loan?</label>
+              <div class="choice-group" data-field="outstandingLoan" role="group" aria-label="Do You Have Outstanding Loan?">
+                <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+                <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+              </div>
+              <select id="outstandingLoan" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+            </div>
           </div>
         </div>
 
@@ -635,6 +648,23 @@ function createServer() {
             </div>
             <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
           </div>
+          <div id="airbagsDeployedWrap" class="field dynamic-followup hidden">
+            <label for="airbagsDeployed">Has The Airbags Been Deployed?</label>
+            <div class="choice-group" data-field="airbagsDeployed" role="group" aria-label="Has The Airbags Been Deployed?">
+              <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+              <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+            </div>
+            <select id="airbagsDeployed" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+          </div>
+          <div id="fireFloodDamageWrap" class="field dynamic-followup hidden">
+            <label for="fireFloodDamage">Has The Vehicle Had Fire or Flood Damage?</label>
+            <div class="choice-group cols-3" data-field="fireFloodDamage" role="group" aria-label="Has The Vehicle Had Fire or Flood Damage?">
+              <button type="button" class="choice-btn small-text" data-value="fire_damage" aria-pressed="false">Fire Damage</button>
+              <button type="button" class="choice-btn small-text" data-value="flood_damage" aria-pressed="false">Flood Damage</button>
+              <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+            </div>
+            <select id="fireFloodDamage" class="hidden"><option value="" selected>Select</option><option value="fire_damage">Fire Damage</option><option value="flood_damage">Flood Damage</option><option value="no">No</option></select>
+          </div>
           <div id="damageAreaWrap" class="field hidden">
             <label>Select the Damaged Area(s)</label>
             <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
@@ -653,8 +683,6 @@ function createServer() {
             <div class="field"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
           </div>
         </div>
-
-        <select id="outstandingLoan" class="hidden"><option value="no" selected>no</option><option>yes</option></select>
 
         <div class="step-actions">
           <button id="nextBtn" type="button">Next</button>
@@ -906,14 +934,26 @@ function createServer() {
 
         var damageAreaWrap = byId("damageAreaWrap");
         var mechanicalDamageWrap = byId("mechanicalDamageWrap");
+        var airbagsDeployedWrap = byId("airbagsDeployedWrap");
+        var fireFloodDamageWrap = byId("fireFloodDamageWrap");
         if (hasDamage === "yes") {
           damageAreaWrap.classList.remove("hidden");
           mechanicalDamageWrap.classList.add("hidden");
+          airbagsDeployedWrap.classList.add("hidden");
+          fireFloodDamageWrap.classList.add("hidden");
           byId("mechanicalDamage").value = "";
+          byId("airbagsDeployed").value = "";
+          byId("fireFloodDamage").value = "";
           syncChoiceButtons("mechanicalDamage");
+          syncChoiceButtons("airbagsDeployed");
+          syncChoiceButtons("fireFloodDamage");
           clearFieldError(byId("mechanicalDamage"));
+          clearFieldError(byId("airbagsDeployed"));
+          clearFieldError(byId("fireFloodDamage"));
         } else if (hasDamage === "no") {
           mechanicalDamageWrap.classList.remove("hidden");
+          airbagsDeployedWrap.classList.remove("hidden");
+          fireFloodDamageWrap.classList.remove("hidden");
           damageAreaWrap.classList.add("hidden");
           clearDamageAreas();
           var oldDamageAreaError = byId("damageArea-error");
@@ -923,6 +963,8 @@ function createServer() {
         } else {
           damageAreaWrap.classList.add("hidden");
           mechanicalDamageWrap.classList.add("hidden");
+          airbagsDeployedWrap.classList.add("hidden");
+          fireFloodDamageWrap.classList.add("hidden");
         }
       }
 
@@ -1060,7 +1102,7 @@ function createServer() {
       function validateRequiredFields() {
         var requiredByStep = {
           1: ["year", "make", "model", "trim"],
-          2: ["titleType", "keysAvailable"],
+          2: ["titleType", "keysAvailable", "outstandingLoan"],
           3: ["zipCode", "mileage"],
           4: ["startsDrives"],
           5: ["hasDamage"],
@@ -1111,6 +1153,14 @@ function createServer() {
               setFieldError(byId("mechanicalDamage"), "This field is required.");
               hasError = true;
             }
+            if (!String(byId("airbagsDeployed").value || "").trim()) {
+              setFieldError(byId("airbagsDeployed"), "This field is required.");
+              hasError = true;
+            }
+            if (!String(byId("fireFloodDamage").value || "").trim()) {
+              setFieldError(byId("fireFloodDamage"), "This field is required.");
+              hasError = true;
+            }
           }
         }
 
@@ -1141,6 +1191,8 @@ function createServer() {
           hasDamage: byId("hasDamage").value,
           damageArea: damageAreas,
           mechanicalDamage: byId("mechanicalDamage").value,
+          airbagsDeployed: byId("airbagsDeployed").value,
+          fireFloodDamage: byId("fireFloodDamage").value,
           phoneNumber: byId("phoneNumber").value
         };
       }
@@ -1269,19 +1321,25 @@ function createServer() {
 
           syncChoiceButtons("titleType");
           syncChoiceButtons("keysAvailable");
+          syncChoiceButtons("outstandingLoan");
           syncChoiceButtons("startsDrives");
           syncChoiceButtons("missingReplacedParts");
           syncChoiceButtons("hasDamage");
           syncChoiceButtons("mechanicalDamage");
+          syncChoiceButtons("airbagsDeployed");
+          syncChoiceButtons("fireFloodDamage");
 
           prefillFromToolInput();
 
           syncChoiceButtons("titleType");
           syncChoiceButtons("keysAvailable");
+          syncChoiceButtons("outstandingLoan");
           syncChoiceButtons("startsDrives");
           syncChoiceButtons("missingReplacedParts");
           syncChoiceButtons("hasDamage");
           syncChoiceButtons("mechanicalDamage");
+          syncChoiceButtons("airbagsDeployed");
+          syncChoiceButtons("fireFloodDamage");
 
           renderStep();
           updateConditionalFields();
@@ -1333,6 +1391,8 @@ function createServer() {
         hasDamage: z.enum(["yes", "no"]).optional(),
         damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
         mechanicalDamage: z.enum(["yes", "no"]).optional(),
+        airbagsDeployed: z.enum(["yes", "no"]).optional(),
+        fireFloodDamage: z.enum(["fire_damage", "flood_damage", "no"]).optional(),
         phoneNumber: z.string().min(10).optional()
       },
       _meta: {
@@ -1373,6 +1433,8 @@ function createServer() {
         hasDamage: z.enum(["yes", "no"]),
         damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
         mechanicalDamage: z.enum(["yes", "no"]).optional(),
+        airbagsDeployed: z.enum(["yes", "no"]).optional(),
+        fireFloodDamage: z.enum(["fire_damage", "flood_damage", "no"]).optional(),
         phoneNumber: z.string().min(10)
       }
     },
@@ -1412,6 +1474,8 @@ function createServer() {
         hasDamage: z.enum(["yes", "no"]),
         damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
         mechanicalDamage: z.enum(["yes", "no"]).optional(),
+        airbagsDeployed: z.enum(["yes", "no"]).optional(),
+        fireFloodDamage: z.enum(["fire_damage", "flood_damage", "no"]).optional(),
         phoneNumber: z.string().min(10)
       },
       _meta: {
