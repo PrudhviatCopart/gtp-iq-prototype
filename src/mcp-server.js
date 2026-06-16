@@ -100,6 +100,27 @@ function createServer() {
         color: #4f6573;
         font-weight: 600;
       }
+      .progress-wrap {
+        margin: 0 0 12px;
+      }
+      .progress-track {
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: #dfe7ed;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 20%;
+        background: linear-gradient(90deg, #0a4f76 0%, #13ad4c 100%);
+        transition: width 0.25s ease;
+      }
+      .progress-text {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #4f6573;
+      }
       .step {
         margin-top: 4px;
       }
@@ -203,6 +224,34 @@ function createServer() {
         padding: 12px;
       }
       .offer-label {
+      .full-offer-mode {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: linear-gradient(145deg, #f5fbff 0%, #eef7f1 100%);
+        padding: 16px;
+        overflow: auto;
+      }
+      .full-offer-mode .card {
+        max-width: 680px;
+        margin: 0 auto;
+        min-height: calc(100vh - 32px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .full-offer-mode .offer-wrap {
+        margin-top: 18px;
+        padding: 24px;
+        border-radius: 18px;
+      }
+      .full-offer-mode .offer-price {
+        font-size: 44px;
+      }
+      .full-offer-mode .accept-btn {
+        font-size: 17px;
+        padding: 13px 16px;
+      }
         font-size: 12px;
         color: #4c6777;
         margin-bottom: 6px;
@@ -348,6 +397,10 @@ function createServer() {
           </div>
         </div>
         <div id="stepHeader" class="step-header">Step 1 of 5</div>
+        <div class="progress-wrap" aria-label="Form progress">
+          <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+          <div id="progressText" class="progress-text">20% complete</div>
+        </div>
 
         <div class="step" data-step="1">
           <div class="grid">
@@ -403,13 +456,14 @@ function createServer() {
           <button id="nextBtn" type="button">Next</button>
           <button id="quoteBtn" type="button" class="hidden">Get Quote</button>
         </div>
-        <div id="status">Ready.</div>
+        <div id="status" class="hidden"></div>
       </div>
     </div>
     <script>
       function byId(id) { return document.getElementById(id); }
       var currentStep = 1;
       var totalSteps = 5;
+      var fullOfferMode = false;
 
       function setStatus(text) {
         var el = byId("status");
@@ -419,11 +473,48 @@ function createServer() {
         el.textContent = text;
       }
 
+      function showStatus(text) {
+        var el = byId("status");
+        if (!el) {
+          return;
+        }
+        el.classList.remove("hidden");
+        setStatus(text);
+      }
+
+      function hideStatus() {
+        var el = byId("status");
+        if (!el) {
+          return;
+        }
+        el.textContent = "";
+        el.classList.add("hidden");
+      }
+
+      function setFullOfferMode(enabled) {
+        if (fullOfferMode === enabled) {
+          return;
+        }
+        fullOfferMode = enabled;
+        var shell = byId("widgetShell");
+        if (!shell) {
+          return;
+        }
+        if (enabled) {
+          shell.classList.add("full-offer-mode");
+        } else {
+          shell.classList.remove("full-offer-mode");
+        }
+      }
+
       function renderOffer(data) {
         var status = byId("status");
         if (!status) {
           return;
         }
+
+        showStatus("");
+        setFullOfferMode(true);
 
         while (status.firstChild) {
           status.removeChild(status.firstChild);
@@ -757,6 +848,9 @@ function createServer() {
       }
 
       function renderStep() {
+        if (fullOfferMode) {
+          setFullOfferMode(false);
+        }
         var steps = document.querySelectorAll(".step");
         for (var i = 0; i < steps.length; i++) {
           var stepNum = Number(steps[i].getAttribute("data-step"));
@@ -771,6 +865,18 @@ function createServer() {
         byId("prevBtn").classList.toggle("hidden", currentStep === 1);
         byId("nextBtn").classList.toggle("hidden", currentStep === totalSteps);
         byId("quoteBtn").classList.toggle("hidden", currentStep !== totalSteps);
+
+        var progressPct = Math.round((currentStep / totalSteps) * 100);
+        var progressFill = byId("progressFill");
+        var progressText = byId("progressText");
+        if (progressFill) {
+          progressFill.style.width = String(progressPct) + "%";
+        }
+        if (progressText) {
+          progressText.textContent = String(progressPct) + "% complete";
+        }
+
+        hideStatus();
       }
 
       function goNext() {
@@ -781,7 +887,6 @@ function createServer() {
         if (currentStep < totalSteps) {
           currentStep += 1;
           renderStep();
-          setStatus("Step " + currentStep + " ready.");
         }
       }
 
@@ -789,7 +894,6 @@ function createServer() {
         if (currentStep > 1) {
           currentStep -= 1;
           renderStep();
-          setStatus("Step " + currentStep + " ready.");
         }
       }
 
@@ -814,12 +918,12 @@ function createServer() {
             return;
           }
 
-          setStatus("Calculating...");
+          showStatus("Calculating...");
           var result = await window.openai.callTool("submit_vehicle_quote_from_ui", toPayload());
 
           if (result && result.structuredContent && result.structuredContent.ok) {
             if (result.structuredContent.eligible === false) {
-              setStatus(formatResult(result.structuredContent));
+              showStatus(formatResult(result.structuredContent));
             } else {
               renderOffer(result.structuredContent);
             }
@@ -827,13 +931,13 @@ function createServer() {
           }
 
           if (result && result.content && result.content[0] && result.content[0].text) {
-            setStatus(result.content[0].text);
+            showStatus(result.content[0].text);
             return;
           }
 
-          setStatus("Unexpected response from tool.");
+          showStatus("Unexpected response from tool.");
         } catch (error) {
-          setStatus(String(error));
+          showStatus(String(error));
         }
       }
 
@@ -857,7 +961,7 @@ function createServer() {
           renderStep();
           updateConditionalFields();
         } catch (_error) {
-          setStatus("Widget loaded in fallback mode.");
+          showStatus("Widget loaded in fallback mode.");
         }
       })();
     </script>
