@@ -95,10 +95,38 @@ function createServer() {
         display: none !important;
       }
       .step-header {
-        margin: 4px 0 10px;
-        font-size: 13px;
+        margin: 0;
+        font-size: 16px;
         color: #4f6573;
-        font-weight: 600;
+        font-weight: 700;
+        text-align: center;
+      }
+      .wizard-top {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        margin-bottom: 8px;
+      }
+      .top-back-btn {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: auto;
+        margin-top: 0;
+        border: 1px solid #bfd0d8;
+        background: #e6eef3;
+        color: #163244;
+        padding: 7px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1;
+      }
+      .back-icon {
+        display: inline-block;
+        margin-right: 6px;
+        font-weight: 800;
       }
       .progress-wrap {
         margin: 0 0 12px;
@@ -165,15 +193,18 @@ function createServer() {
         background: #eef4f7;
         color: #163244;
         font-weight: 700;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
       }
       .choice-group .choice-btn.small-text {
         font-size: 12px;
         line-height: 1.2;
       }
       .choice-group .choice-btn.selected {
-        background: #0f766e;
+        background: #eef4f7;
+        border-width: 2px;
         border-color: #0f766e;
-        color: #ffffff;
+        color: #0b4e69;
+        box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.18);
       }
       .choice-group.input-error .choice-btn {
         border-color: #cf2e2e;
@@ -183,6 +214,7 @@ function createServer() {
         display: flex;
         gap: 8px;
         margin-top: 12px;
+        justify-content: flex-end;
       }
       .btn-secondary {
         background: #e6eef3;
@@ -223,6 +255,15 @@ function createServer() {
         .brand-right {
           width: 48%;
         }
+        .top-back-btn {
+          position: static;
+          width: 100%;
+          margin-bottom: 8px;
+        }
+        .wizard-top {
+          min-height: 0;
+          display: block;
+        }
         .field.full-width {
           grid-column: auto;
         }
@@ -233,9 +274,10 @@ function createServer() {
       }
       label {
         display: block;
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: 4px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #17394d;
+        margin-bottom: 8px;
       }
       input, select, button {
         width: 100%;
@@ -504,7 +546,10 @@ function createServer() {
             </svg>
           </div>
         </div>
-        <div id="stepHeader" class="step-header">Step 1 of 6</div>
+        <div class="wizard-top">
+          <button id="prevBtn" type="button" class="top-back-btn hidden"><span class="back-icon" aria-hidden="true">&#8592;</span>Back</button>
+          <div id="stepHeader" class="step-header">Step 1 of 6</div>
+        </div>
         <div class="progress-wrap" aria-label="Form progress">
           <div class="progress-track"><div id="progressFill" class="progress-fill" style="width: 17%;"></div></div>
           <div id="progressText" class="progress-text">17% complete</div>
@@ -522,8 +567,8 @@ function createServer() {
         <div class="step hidden" data-step="2">
           <div class="grid">
             <div class="field">
-              <label for="titleType">Title Type</label>
-              <div class="choice-group cols-4" data-field="titleType" role="group" aria-label="Title Type">
+              <label for="titleType">What Is Your Title Type?</label>
+              <div class="choice-group cols-4" data-field="titleType" role="group" aria-label="What Is Your Title Type?">
                 <button type="button" class="choice-btn" data-value="clean" aria-pressed="false">Clean</button>
                 <button type="button" class="choice-btn" data-value="salvage" aria-pressed="false">Salvage</button>
                 <button type="button" class="choice-btn" data-value="rebuilt" aria-pressed="false">Rebuilt</button>
@@ -532,8 +577,8 @@ function createServer() {
               <select id="titleType" class="hidden"><option value="" selected>Select</option><option>clean</option><option>salvage</option><option>rebuilt</option><option>no_title</option></select>
             </div>
             <div class="field">
-              <label for="keysAvailable">Keys Available</label>
-              <div class="choice-group" data-field="keysAvailable" role="group" aria-label="Keys Available">
+              <label for="keysAvailable">Do You Have Keys Available?</label>
+              <div class="choice-group" data-field="keysAvailable" role="group" aria-label="Do You Have Keys Available?">
                 <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
                 <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
               </div>
@@ -544,16 +589,16 @@ function createServer() {
 
         <div class="step hidden" data-step="3">
           <div class="grid">
-            <div class="field"><label for="zipCode">ZIP</label><input id="zipCode" value="" /></div>
-            <div class="field"><label for="mileage">Mileage</label><input id="mileage" value="" /></div>
+            <div class="field"><label for="zipCode">Zip Code</label><input id="zipCode" value="" /></div>
+            <div class="field"><label for="mileage">Mileage/Odometer reading?</label><input id="mileage" value="" /></div>
           </div>
         </div>
 
         <div class="step hidden" data-step="4">
           <div class="grid">
             <div class="field full-width">
-              <label for="startsDrives">Starts and Drives</label>
-              <div class="choice-group cols-3" data-field="startsDrives" role="group" aria-label="Starts and Drives">
+              <label for="startsDrives">Does Your Vehicle Start and Drive?</label>
+              <div class="choice-group cols-3" data-field="startsDrives" role="group" aria-label="Does Your Vehicle Start and Drive?">
                 <button type="button" class="choice-btn small-text" data-value="starts_and_drives" aria-pressed="false">Starts And Drives</button>
                 <button type="button" class="choice-btn small-text" data-value="starts_no_drive" aria-pressed="false">Starts But Does Not Drive</button>
                 <button type="button" class="choice-btn small-text" data-value="no_start" aria-pressed="false">Does Not Start</button>
@@ -562,7 +607,7 @@ function createServer() {
             </div>
           </div>
           <div id="missingPartsWrap" class="field dynamic-followup hidden">
-            <label for="missingReplacedParts">Any missing or replaced parts?</label>
+            <label for="missingReplacedParts">Any Missing Or Replaced Parts?</label>
             <div class="choice-group" data-field="missingReplacedParts" role="group" aria-label="Missing or replaced parts">
               <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
               <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
@@ -574,8 +619,8 @@ function createServer() {
         <div class="step hidden" data-step="5">
           <div class="grid">
             <div class="field">
-              <label for="hasDamage">Damage</label>
-              <div class="choice-group" data-field="hasDamage" role="group" aria-label="Damage">
+              <label for="hasDamage">Is There Damage?</label>
+              <div class="choice-group" data-field="hasDamage" role="group" aria-label="Is There Damage?">
                 <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
                 <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
               </div>
@@ -583,15 +628,15 @@ function createServer() {
             </div>
           </div>
           <div id="mechanicalDamageWrap" class="field dynamic-followup hidden">
-            <label for="mechanicalDamage">Mechanical Damage?</label>
-            <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Mechanical Damage">
+            <label for="mechanicalDamage">Is There Mechanical Damage?</label>
+            <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Is There Mechanical Damage?">
               <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
               <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
             </div>
             <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
           </div>
           <div id="damageAreaWrap" class="field hidden">
-            <label>Damage area? (select all that apply)</label>
+            <label>Select the Damaged Area(s)</label>
             <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
               <button type="button" class="damage-zone zone-front" data-zone="Front">Front</button>
               <button type="button" class="damage-zone zone-rear" data-zone="Rear">Rear</button>
@@ -612,7 +657,6 @@ function createServer() {
         <select id="outstandingLoan" class="hidden"><option value="no" selected>no</option><option>yes</option></select>
 
         <div class="step-actions">
-          <button id="prevBtn" type="button" class="btn-secondary hidden">Back</button>
           <button id="nextBtn" type="button">Next</button>
           <button id="quoteBtn" type="button" class="hidden">Get Quote</button>
         </div>
