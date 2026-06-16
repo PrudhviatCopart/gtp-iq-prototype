@@ -141,6 +141,28 @@ function createServer() {
         font-weight: 500;
         margin: 0;
       }
+      .choice-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 2px;
+      }
+      .choice-group .choice-btn {
+        margin-top: 0;
+        border: 1px solid #bfd0d8;
+        background: #eef4f7;
+        color: #163244;
+        font-weight: 700;
+      }
+      .choice-group .choice-btn.selected {
+        background: #0f766e;
+        border-color: #0f766e;
+        color: #ffffff;
+      }
+      .choice-group.input-error .choice-btn {
+        border-color: #cf2e2e;
+        background: #fff6f6;
+      }
       .step-actions {
         display: flex;
         gap: 8px;
@@ -234,6 +256,7 @@ function createServer() {
         height: 360px;
         margin: 8px auto 0;
         background: #eef1f3 url("https://raw.githubusercontent.com/PrudhviatCopart/gtp-iq-prototype/refs/heads/main/images/damaged_areas_bg.png") center/contain no-repeat;
+        background-size: 155px;
         border-radius: 12px;
       }
       .damage-zone {
@@ -254,35 +277,35 @@ function createServer() {
         background: rgba(43, 160, 118, 0.34);
         border-color: #0a7f6f;
       }
-      .zone-top {
-        left: 56px;
-        top: 22px;
-        width: 188px;
-        height: 76px;
-      }
       .zone-front {
-        left: 52px;
-        bottom: 26px;
-        width: 196px;
-        height: 46px;
+        left: 50px;
+        top: 5px;
+        width: 185px;
+        height: 95px;
       }
       .zone-rear {
-        left: 104px;
-        top: 84px;
-        width: 92px;
-        height: 236px;
+        left: 50px;
+        bottom: 25px;
+        width: 185px;
+        height: 55px;
+      }
+      .zone-top {
+        left: 110px;
+        top: 105px;
+        width: 65px;
+        height: 160px;
       }
       .zone-side-left {
-        left: 26px;
-        top: 106px;
-        width: 84px;
-        height: 192px;
+        left: 40px;
+        top: 105px;
+        width: 65px;
+        height: 160px;
       }
       .zone-side-right {
-        right: 26px;
-        top: 106px;
-        width: 84px;
-        height: 192px;
+        right: 45px;
+        top: 105px;
+        width: 65px;
+        height: 160px;
       }
       .damage-hint {
         margin-top: 8px;
@@ -491,15 +514,29 @@ function createServer() {
 
         <div class="step hidden" data-step="4">
           <div class="grid">
-            <div class="field"><label for="hasDamage">Damage</label><select id="hasDamage"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
-            <div id="mechanicalDamageWrap" class="field hidden"><label for="mechanicalDamage">Mechanical Damage?</label><select id="mechanicalDamage"><option value="" selected>Select</option><option>yes</option><option>no</option></select></div>
+            <div class="field">
+              <label for="hasDamage">Damage</label>
+              <div class="choice-group" data-field="hasDamage" role="group" aria-label="Damage">
+                <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+                <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+              </div>
+              <select id="hasDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+            </div>
+            <div id="mechanicalDamageWrap" class="field hidden">
+              <label for="mechanicalDamage">Mechanical Damage?</label>
+              <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Mechanical Damage">
+                <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+                <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+              </div>
+              <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+            </div>
           </div>
           <div id="damageAreaWrap" class="field hidden">
             <label>Damage area? (select all that apply)</label>
             <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
-              <button type="button" class="damage-zone zone-top" data-zone="Front">Front</button>
-              <button type="button" class="damage-zone zone-front" data-zone="Rear">Rear</button>
-              <button type="button" class="damage-zone zone-rear" data-zone="Top">Top</button>
+              <button type="button" class="damage-zone zone-front" data-zone="Front">Front</button>
+              <button type="button" class="damage-zone zone-rear" data-zone="Rear">Rear</button>
+              <button type="button" class="damage-zone zone-top" data-zone="Top">Top</button>
               <button type="button" class="damage-zone zone-side-left" data-zone="Side">Left</button>
               <button type="button" class="damage-zone zone-side-right" data-zone="Side">Right</button>
             </div>
@@ -769,6 +806,7 @@ function createServer() {
           damageAreaWrap.classList.remove("hidden");
           mechanicalDamageWrap.classList.add("hidden");
           byId("mechanicalDamage").value = "";
+          syncChoiceButtons("mechanicalDamage");
           clearFieldError(byId("mechanicalDamage"));
         } else if (hasDamage === "no") {
           mechanicalDamageWrap.classList.remove("hidden");
@@ -789,6 +827,10 @@ function createServer() {
           return;
         }
         el.classList.remove("input-error");
+        var group = getChoiceGroup(el.id);
+        if (group) {
+          group.classList.remove("input-error");
+        }
         var errorEl = byId(el.id + "-error");
         if (errorEl && errorEl.parentNode) {
           errorEl.parentNode.removeChild(errorEl);
@@ -800,6 +842,10 @@ function createServer() {
           return;
         }
         el.classList.add("input-error");
+        var group = getChoiceGroup(el.id);
+        if (group) {
+          group.classList.add("input-error");
+        }
 
         var existing = byId(el.id + "-error");
         if (existing) {
@@ -812,6 +858,42 @@ function createServer() {
         errorEl.className = "field-error";
         errorEl.textContent = message;
         el.parentNode.appendChild(errorEl);
+      }
+
+      function getChoiceGroup(fieldId) {
+        return document.querySelector('.choice-group[data-field="' + fieldId + '"]');
+      }
+
+      function syncChoiceButtons(fieldId) {
+        var group = getChoiceGroup(fieldId);
+        var field = byId(fieldId);
+        if (!group || !field) {
+          return;
+        }
+        var buttons = group.querySelectorAll(".choice-btn");
+        var value = String(field.value || "");
+        for (var i = 0; i < buttons.length; i++) {
+          var active = buttons[i].getAttribute("data-value") === value;
+          buttons[i].classList.toggle("selected", active);
+          buttons[i].setAttribute("aria-pressed", active ? "true" : "false");
+        }
+      }
+
+      function onChoiceButtonClick(event) {
+        var btn = event.currentTarget;
+        var group = btn && btn.closest(".choice-group");
+        if (!btn || !group) {
+          return;
+        }
+        var fieldId = group.getAttribute("data-field");
+        var field = byId(fieldId);
+        if (!field) {
+          return;
+        }
+        field.value = String(btn.getAttribute("data-value") || "");
+        syncChoiceButtons(fieldId);
+        clearFieldError(field);
+        field.dispatchEvent(new Event("change", { bubbles: true }));
       }
 
       function getDamageButtons() {
@@ -1071,9 +1153,23 @@ function createServer() {
             damageButtons[i].setAttribute("aria-pressed", "false");
             damageButtons[i].addEventListener("click", toggleDamageArea);
           }
+
+          var choiceButtons = document.querySelectorAll(".choice-group .choice-btn");
+          for (var c = 0; c < choiceButtons.length; c++) {
+            choiceButtons[c].addEventListener("click", onChoiceButtonClick);
+          }
+
           byId("startsDrives").addEventListener("change", updateConditionalFields);
           byId("hasDamage").addEventListener("change", updateConditionalFields);
+
+          syncChoiceButtons("hasDamage");
+          syncChoiceButtons("mechanicalDamage");
+
           prefillFromToolInput();
+
+          syncChoiceButtons("hasDamage");
+          syncChoiceButtons("mechanicalDamage");
+
           renderStep();
           updateConditionalFields();
         } catch (_error) {
