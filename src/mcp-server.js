@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import * as z from "zod/v4";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -19,6 +21,8 @@ const allowedHosts = String(process.env.MCP_ALLOWED_HOSTS || "")
   .filter(Boolean);
 
 const transports = {};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function requestQuote(args) {
   const response = await fetch(`${quoteApiBaseUrl}/api/quote`, {
@@ -233,46 +237,14 @@ function createServer() {
         width: min(100%, 300px);
         height: 360px;
         margin: 8px auto 0;
-        background: #eef1f3;
+        background: #eef1f3 url("/assets/damaged-areas.png") center/contain no-repeat;
         border-radius: 12px;
-      }
-      .car-silhouette {
-        position: absolute;
-        left: 50%;
-        top: 57%;
-        transform: translate(-50%, -50%);
-        width: 112px;
-        height: 236px;
-        border-radius: 56px;
-        border: 2px solid #b7c0c7;
-        background: linear-gradient(180deg, #d9dee2 0%, #c6cdd3 55%, #d3d9de 100%);
-        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.18);
-      }
-      .car-silhouette::before {
-        content: "";
-        position: absolute;
-        left: 22px;
-        right: 22px;
-        top: 48px;
-        bottom: 48px;
-        border-radius: 20px;
-        background: #9aa4ac;
-      }
-      .car-silhouette::after {
-        content: "";
-        position: absolute;
-        left: 32px;
-        right: 32px;
-        top: 76px;
-        bottom: 76px;
-        border-radius: 8px;
-        background: #e8edf0;
       }
       .damage-zone {
         position: absolute;
         border: 2px dashed #0e9b87;
         border-radius: 10px;
-        background: rgba(172, 186, 121, 0.34);
+        background: rgba(172, 186, 121, 0.25);
         color: #21414d;
         font-size: 11px;
         font-weight: 700;
@@ -529,12 +501,11 @@ function createServer() {
           <div id="damageAreaWrap" class="field hidden">
             <label>Damage area? (select all that apply)</label>
             <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
-              <div class="car-silhouette" aria-hidden="true"></div>
-              <button type="button" class="damage-zone zone-top" data-zone="Top">Top</button>
-              <button type="button" class="damage-zone zone-front" data-zone="Front">Front</button>
-              <button type="button" class="damage-zone zone-rear" data-zone="Rear">Rear</button>
-              <button type="button" class="damage-zone zone-side-left" data-zone="Side">Side</button>
-              <button type="button" class="damage-zone zone-side-right" data-zone="Side">Side</button>
+              <button type="button" class="damage-zone zone-top" data-zone="Front">Front</button>
+              <button type="button" class="damage-zone zone-front" data-zone="Rear">Rear</button>
+              <button type="button" class="damage-zone zone-rear" data-zone="Top">Top</button>
+              <button type="button" class="damage-zone zone-side-left" data-zone="Side">Left</button>
+              <button type="button" class="damage-zone zone-side-right" data-zone="Side">Right</button>
             </div>
             <div class="damage-hint">Tap the highlighted zones to mark damaged areas.</div>
           </div>
@@ -1298,6 +1269,10 @@ const app = createMcpExpressApp(
     ? { host: "0.0.0.0", allowedHosts }
     : { host: "0.0.0.0" }
 );
+
+app.get("/assets/damaged-areas.png", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "damaged-areas.png"));
+});
 
 app.post("/mcp", async (req, res) => {
   try {
