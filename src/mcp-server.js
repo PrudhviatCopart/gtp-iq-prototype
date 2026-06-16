@@ -939,23 +939,23 @@ function createServer() {
         if (hasDamage === "yes") {
           damageAreaWrap.classList.remove("hidden");
           mechanicalDamageWrap.classList.add("hidden");
-          airbagsDeployedWrap.classList.add("hidden");
-          fireFloodDamageWrap.classList.add("hidden");
-          byId("mechanicalDamage").value = "";
-          byId("airbagsDeployed").value = "";
-          byId("fireFloodDamage").value = "";
-          syncChoiceButtons("mechanicalDamage");
-          syncChoiceButtons("airbagsDeployed");
-          syncChoiceButtons("fireFloodDamage");
-          clearFieldError(byId("mechanicalDamage"));
-          clearFieldError(byId("airbagsDeployed"));
-          clearFieldError(byId("fireFloodDamage"));
-        } else if (hasDamage === "no") {
-          mechanicalDamageWrap.classList.remove("hidden");
           airbagsDeployedWrap.classList.remove("hidden");
           fireFloodDamageWrap.classList.remove("hidden");
+          byId("mechanicalDamage").value = "";
+          syncChoiceButtons("mechanicalDamage");
+          clearFieldError(byId("mechanicalDamage"));
+        } else if (hasDamage === "no") {
+          mechanicalDamageWrap.classList.remove("hidden");
+          airbagsDeployedWrap.classList.add("hidden");
+          fireFloodDamageWrap.classList.add("hidden");
           damageAreaWrap.classList.add("hidden");
           clearDamageAreas();
+          byId("airbagsDeployed").value = "";
+          byId("fireFloodDamage").value = "";
+          syncChoiceButtons("airbagsDeployed");
+          syncChoiceButtons("fireFloodDamage");
+          clearFieldError(byId("airbagsDeployed"));
+          clearFieldError(byId("fireFloodDamage"));
           var oldDamageAreaError = byId("damageArea-error");
           if (oldDamageAreaError && oldDamageAreaError.parentNode) {
             oldDamageAreaError.parentNode.removeChild(oldDamageAreaError);
@@ -1148,17 +1148,17 @@ function createServer() {
               byId("damageAreaWrap").appendChild(damageAreaError);
               hasError = true;
             }
-          } else if (hasDamage === "no") {
-            if (!String(byId("mechanicalDamage").value || "").trim()) {
-              setFieldError(byId("mechanicalDamage"), "This field is required.");
-              hasError = true;
-            }
             if (!String(byId("airbagsDeployed").value || "").trim()) {
               setFieldError(byId("airbagsDeployed"), "This field is required.");
               hasError = true;
             }
             if (!String(byId("fireFloodDamage").value || "").trim()) {
               setFieldError(byId("fireFloodDamage"), "This field is required.");
+              hasError = true;
+            }
+          } else if (hasDamage === "no") {
+            if (!String(byId("mechanicalDamage").value || "").trim()) {
+              setFieldError(byId("mechanicalDamage"), "This field is required.");
               hasError = true;
             }
           }
