@@ -106,7 +106,25 @@ function createServer() {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 24px;
-        box-shadow: 0 10px 40px -10px rgba(5, 150, 105, 0.25), 0 0 0 1px rgba(5, 150, 105, 0.05);
+        position: relative;
+        z-index: 1;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        z-index: -1;
+        border-radius: calc(var(--radius) + 4px);
+        background: linear-gradient(60deg, rgba(5, 150, 105, 0.6), rgba(16, 185, 129, 0.1), rgba(4, 120, 87, 0.5), rgba(16, 185, 129, 0.1));
+        background-size: 300% 300%;
+        filter: blur(14px);
+        animation: fluidGradient 6s ease-in-out infinite;
+        opacity: 0.9;
+      }
+      @keyframes fluidGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
       .grid {
         display: grid;
@@ -319,6 +337,7 @@ function createServer() {
       }
       button:hover {
         background: var(--primary-active);
+        color: var(--primary-light)!important;
       }
       #status {
         margin-top: 20px;
