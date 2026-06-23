@@ -126,12 +126,27 @@ function createServer() {
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
       }
+      .trust-badge {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: rgba(5, 150, 105, 0.04);
+        border: 1px solid var(--primary-ring);
+        border-radius: 10px;
+        padding: 16px;
+        margin-top: 24px;
+      }
+      .trust-badge img {
+        flex-shrink: 0;
+        width: 32px;
+        height: auto;
+      }
       .legal-text {
         font-size: 12px;
         color: var(--text-muted);
-        margin-top: 16px;
         line-height: 1.5;
         text-align: left;
+        margin: 0;
       }
       .grid {
         display: grid;
@@ -771,8 +786,11 @@ function createServer() {
           <div class="grid">
             <div class="field full-width"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
           </div>
-          <div class="legal-text">
-            By continuing, you agree and consent to <strong>receive communications from us via text message or other then-current methods of communication to assist with the sale of your vehicle. </strong>We value your privacy. <strong>To opt-out of text communications from us, respond with "STOP".</strong> Message and data rates apply. Messaging frequency may vary. Please review our <a href="https://www.cashforcars.com/privacy-policy/" target="_blank" style="color: var(--primary); font-weight: 600;">Privacy policy</a> to learn more.
+          <div class="trust-badge">
+            <img src="https://www.cashforcars.com/services/instaquote-ws/instaquote/assets/images/shield-icon.png" alt="Privacy Shield" width="32" height="32" />
+            <div class="legal-text">
+              By continuing, you agree and consent to <strong>receive communications from us via text message or other then-current methods of communication to assist with the sale of your vehicle. </strong>We value your privacy. <strong>To opt-out of text communications from us, respond with "STOP".</strong> Message and data rates apply. Messaging frequency may vary. Please review our <a href="https://www.cashforcars.com/privacy-policy/" target="_blank" style="color: var(--primary); font-weight: 600;">Privacy policy</a> to learn more.
+            </div>
           </div>
         </div>
 
