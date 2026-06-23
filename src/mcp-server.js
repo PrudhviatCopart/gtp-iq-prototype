@@ -103,23 +103,21 @@ function createServer() {
       }
       .card {
         background: var(--card-bg);
-        border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 24px;
         position: relative;
         z-index: 1;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       }
       .card::before {
         content: "";
         position: absolute;
-        inset: -3px;
+        inset: -2px;
         z-index: -1;
-        border-radius: calc(var(--radius) + 4px);
+        border-radius: calc(var(--radius) + 2px);
         background: linear-gradient(115deg, #059669, #34d399, #0f766e, #10b981, #059669, #34d399);
         background-size: 300% 300%;
-        filter: blur(10px);
         animation: fluidGradient 8s linear infinite;
-        opacity: 0.95;
       }
       @keyframes fluidGradient {
         0% { background-position: 0% 50%; }
