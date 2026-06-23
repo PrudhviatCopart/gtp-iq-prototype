@@ -112,19 +112,26 @@ function createServer() {
       .card::before {
         content: "";
         position: absolute;
-        inset: -2px;
+        inset: -3px;
         z-index: -1;
         border-radius: calc(var(--radius) + 4px);
-        background: linear-gradient(60deg, rgba(5, 150, 105, 0.6), rgba(16, 185, 129, 0.1), rgba(4, 120, 87, 0.5), rgba(16, 185, 129, 0.1));
+        background: linear-gradient(115deg, #059669, #34d399, #0f766e, #10b981, #059669, #34d399);
         background-size: 300% 300%;
-        filter: blur(14px);
-        animation: fluidGradient 6s ease-in-out infinite;
-        opacity: 0.9;
+        filter: blur(10px);
+        animation: fluidGradient 8s linear infinite;
+        opacity: 0.95;
       }
       @keyframes fluidGradient {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
+      }
+      .legal-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 16px;
+        line-height: 1.5;
+        text-align: left;
       }
       .grid {
         display: grid;
@@ -762,7 +769,10 @@ function createServer() {
 
         <div class="step hidden" data-step="6">
           <div class="grid">
-            <div class="field"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
+            <div class="field full-width"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
+          </div>
+          <div class="legal-text">
+            By continuing, you agree and consent to <strong>receive communications from us via text message or other then-current methods of communication to assist with the sale of your vehicle. </strong>We value your privacy. <strong>To opt-out of text communications from us, respond with "STOP".</strong> Message and data rates apply. Messaging frequency may vary. Please review our <a href="https://www.cashforcars.com/privacy-policy/" target="_blank" style="color: var(--primary); font-weight: 600;">Privacy policy</a> to learn more.
           </div>
         </div>
 
