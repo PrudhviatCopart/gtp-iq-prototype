@@ -246,6 +246,33 @@ function createServer() {
       .choice-group.cols-3 {
         grid-template-columns: repeat(3, 1fr);
       }
+      .choice-group.choice-list {
+        display: flex;
+        flex-direction: column;
+      }
+      .choice-group.choice-list .choice-btn {
+        text-align: left;
+        padding: 16px;
+        height: auto;
+      }
+      .list-title {
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--text-main);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .list-desc {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 400;
+        display: block;
+        line-height: 1.4;
+        white-space: normal;
+      }
+      .choice-group.choice-list .choice-btn.selected .list-title {
+        color: var(--primary);
+      }
       .choice-group.cols-4 {
         grid-template-columns: repeat(4, 1fr);
       }
@@ -717,13 +744,27 @@ function createServer() {
 
         <div class="step hidden" data-step="5">
           <div class="grid">
-            <div class="field">
-              <label for="hasDamage">Is There Damage?</label>
-              <div class="choice-group" data-field="hasDamage" role="group" aria-label="Is There Damage?">
-                <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
-                <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+            <div class="field full-width">
+              <label for="hasDamage">What is the condition of the vehicle?</label>
+              <div class="choice-group choice-list" data-field="hasDamage" role="group" aria-label="What is the condition of the vehicle?">
+                <button type="button" class="choice-btn" data-value="frame_structural" aria-pressed="false">
+                  <span class="list-title">Frame Or Structural Damage</span>
+                  <span class="list-desc">Severe damage to the frame, engine, or major components, typically from a major impact.</span>
+                </button>
+                <button type="button" class="choice-btn" data-value="body_panel" aria-pressed="false">
+                  <span class="list-title">Body Panel Damage</span>
+                  <span class="list-desc">Moderate damage to doors, bumpers, hood, or other exterior panels.</span>
+                </button>
+                <button type="button" class="choice-btn" data-value="scratches_dents" aria-pressed="false">
+                  <span class="list-title">Noticeable Scratches Or Dents</span>
+                  <span class="list-desc">Surface damage such as scratches, dents, or paint issues.</span>
+                </button>
+                <button type="button" class="choice-btn" data-value="little_to_no" aria-pressed="false">
+                  <span class="list-title">Little Or No Visible Damage</span>
+                  <span class="list-desc">Minor dents & scratches or no damage at all.</span>
+                </button>
               </div>
-              <select id="hasDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+              <select id="hasDamage" class="hidden"><option value="" selected>Select</option><option value="frame_structural">Frame Or Structural</option><option value="body_panel">Body Panel</option><option value="scratches_dents">Scratches Or Dents</option><option value="little_to_no">Little Or No Visible</option></select>
             </div>
           </div>
           <div id="mechanicalDamageWrap" class="field dynamic-followup hidden">
@@ -958,10 +999,16 @@ function createServer() {
             parsed.startsDrives = "starts_and_drives";
           }
 
-          if (/\bno\s+damage\b/i.test(text)) {
-            parsed.hasDamage = "no";
+          if (/\bno\s+damage\b/i.test(text) || /\blittle\b/i.test(text)) {
+            parsed.hasDamage = "little_to_no";
+          } else if (/\bframe\b/i.test(text) || /\bstructural\b/i.test(text)) {
+            parsed.hasDamage = "frame_structural";
+          } else if (/\bbody\s+panel\b/i.test(text) || /\bmoderate\b/i.test(text)) {
+            parsed.hasDamage = "body_panel";
+          } else if (/\bscratch\b/i.test(text) || /\bdent\b/i.test(text)) {
+            parsed.hasDamage = "scratches_dents";
           } else if (/\bdamage\b/i.test(text)) {
-            parsed.hasDamage = "yes";
+            parsed.hasDamage = "body_panel";
           }
 
           return parsed;
@@ -1028,7 +1075,7 @@ function createServer() {
         var mechanicalDamageWrap = byId("mechanicalDamageWrap");
         var airbagsDeployedWrap = byId("airbagsDeployedWrap");
         var fireFloodDamageWrap = byId("fireFloodDamageWrap");
-        if (hasDamage === "yes") {
+        if (hasDamage === "frame_structural" || hasDamage === "body_panel" || hasDamage === "scratches_dents") {
           damageAreaWrap.classList.remove("hidden");
           mechanicalDamageWrap.classList.add("hidden");
           airbagsDeployedWrap.classList.remove("hidden");
@@ -1036,7 +1083,7 @@ function createServer() {
           byId("mechanicalDamage").value = "";
           syncChoiceButtons("mechanicalDamage");
           clearFieldError(byId("mechanicalDamage"));
-        } else if (hasDamage === "no") {
+        } else if (hasDamage === "little_to_no") {
           mechanicalDamageWrap.classList.remove("hidden");
           airbagsDeployedWrap.classList.add("hidden");
           fireFloodDamageWrap.classList.add("hidden");
@@ -1253,7 +1300,7 @@ function createServer() {
 
         if (currentStep === 5) {
           var hasDamage = byId("hasDamage").value;
-          if (hasDamage === "yes") {
+          if (hasDamage === "frame_structural" || hasDamage === "body_panel" || hasDamage === "scratches_dents") {
             var anySelected = getDamageAreas().length > 0;
             var oldDamageAreaError = byId("damageArea-error");
             if (oldDamageAreaError && oldDamageAreaError.parentNode) {
@@ -1275,7 +1322,7 @@ function createServer() {
               setFieldError(byId("fireFloodDamage"), "This field is required.");
               hasError = true;
             }
-          } else if (hasDamage === "no") {
+          } else if (hasDamage === "little_to_no") {
             if (!String(byId("mechanicalDamage").value || "").trim()) {
               setFieldError(byId("mechanicalDamage"), "This field is required.");
               hasError = true;
@@ -1543,7 +1590,7 @@ function createServer() {
         missingReplacedParts: z.enum(["yes", "no"]).optional(),
         outstandingLoan: z.enum(["yes", "no"]).optional(),
         keysAvailable: z.enum(["yes", "no"]).optional(),
-        hasDamage: z.enum(["yes", "no"]).optional(),
+        hasDamage: z.enum(["frame_structural", "body_panel", "scratches_dents", "little_to_no"]).optional(),
         damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
         mechanicalDamage: z.enum(["yes", "no"]).optional(),
         airbagsDeployed: z.enum(["yes", "no"]).optional(),
@@ -1588,7 +1635,7 @@ function createServer() {
         missingReplacedParts: z.enum(["yes", "no"]).optional(),
         outstandingLoan: z.enum(["yes", "no"]),
         keysAvailable: z.enum(["yes", "no"]),
-        hasDamage: z.enum(["yes", "no"]),
+        hasDamage: z.enum(["frame_structural", "body_panel", "scratches_dents", "little_to_no"]),
         damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
         mechanicalDamage: z.enum(["yes", "no"]).optional(),
         airbagsDeployed: z.enum(["yes", "no"]).optional(),
@@ -1632,7 +1679,7 @@ function createServer() {
         missingReplacedParts: z.enum(["yes", "no"]).optional(),
         outstandingLoan: z.enum(["yes", "no"]),
         keysAvailable: z.enum(["yes", "no"]),
-        hasDamage: z.enum(["yes", "no"]),
+        hasDamage: z.enum(["frame_structural", "body_panel", "scratches_dents", "little_to_no"]),
         damageArea: z.array(z.enum(["Top", "Front", "Rear", "Side"])).optional(),
         mechanicalDamage: z.enum(["yes", "no"]).optional(),
         airbagsDeployed: z.enum(["yes", "no"]).optional(),
