@@ -102,18 +102,25 @@ function createServer() {
         margin: 0 auto;
       }
       .card {
-        background: var(--card-bg);
         border-radius: var(--radius);
         padding: 24px;
         position: relative;
         z-index: 1;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       }
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: var(--radius);
+        background: var(--card-bg);
+      }
       .card::before {
         content: "";
         position: absolute;
         inset: -2px;
-        z-index: -1;
+        z-index: -2;
         border-radius: calc(var(--radius) + 2px);
         background: linear-gradient(115deg, #059669, #34d399, #0f766e, #10b981, #059669, #34d399);
         background-size: 300% 300%;
