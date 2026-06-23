@@ -163,6 +163,8 @@ function createServer() {
         transition: var(--transition);
         display: flex;
         align-items: center;
+        width: auto;
+        border: 1px solid var(--border);
       }
       .top-back-btn:hover {
         background: #f1f5f9;
@@ -283,13 +285,6 @@ function createServer() {
           flex-direction: column;
           align-items: flex-start;
           gap: 16px;
-        }
-        .top-back-btn {
-          position: static;
-          transform: none;
-          width: max-content;
-          margin-bottom: 12px;
-          border: 1px solid var(--border);
         }
       }
       label {
@@ -465,6 +460,55 @@ function createServer() {
         color: #b42318;
       }
 
+    
+      .tab-navigation {
+        display: flex;
+        width: 100%;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 12px;
+        position: relative;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        box-sizing: border-box;
+      }
+      .tab-button {
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: var(--transition);
+        z-index: 2;
+        font-size: 14px;
+        flex: 1;
+        text-align: center;
+        margin: 0;
+      }
+      .tab-button.active {
+        color: var(--primary);
+      }
+      .tab-indicator {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        height: calc(100% - 8px);
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1;
+        width: calc(50% - 4px);
+      }
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .tab-content.active {
+        display: block;
+      }
     </style>
   </head>
   <body>
@@ -571,12 +615,20 @@ function createServer() {
           <div id="progressText" class="progress-text">17% complete</div>
         </div>
 
-        <div class="step" data-step="1">
-          <div class="grid">
-            <div class="field"><label for="year">Year</label><input id="year" value="" /></div>
-            <div class="field"><label for="make">Make</label><input id="make" value="" /></div>
-            <div class="field"><label for="model">Model</label><input id="model" value="" /></div>
-            <div class="field"><label for="trim">Trim</label><input id="trim" value="" /></div>
+                <div class="step" data-step="1">
+          <div class="tab-navigation">
+            <div class="tab-indicator" id="tabIndicator"></div>
+            <button type="button" class="tab-button active" data-tab="vin">VIN</button>
+            <button type="button" class="tab-button" data-tab="license-plate">LICENSE PLATE</button>
+          </div>
+          <div class="tab-content active" id="vin-tab">
+            <div class="field"><label for="vinNumber">VIN Number</label><input id="vinNumber" placeholder="Enter 17-character VIN" maxlength="17" style="text-transform: uppercase;" /></div>
+          </div>
+          <div class="tab-content" id="license-plate-tab">
+            <div class="grid">
+              <div class="field"><label for="licensePlate">License Plate</label><input id="licensePlate" placeholder="License Plate" style="text-transform: uppercase;" /></div>
+              <div class="field"><label for="plateZipCode">ZIP Code</label><input id="plateZipCode" placeholder="ZIP Code" maxlength="5" /></div>
+            </div>
           </div>
         </div>
 
@@ -888,6 +940,7 @@ function createServer() {
 
         var parsedInput = parseFromUtterance(input.utterance);
         var mergedInput = {};
+        if (input && input.vin) mergedInput.vinNumber = input.vin;
         for (var keyA in input) {
           mergedInput[keyA] = input[keyA];
         }
@@ -896,10 +949,9 @@ function createServer() {
         }
 
         var fields = [
-          "year",
-          "make",
-          "model",
-          "trim",
+          "vinNumber",
+          "licensePlate",
+          "plateZipCode",
           "titleType",
           "zipCode",
           "mileage",
@@ -1112,7 +1164,7 @@ function createServer() {
 
       function validateRequiredFields() {
         var requiredByStep = {
-          1: ["year", "make", "model", "trim"],
+          1: [],
           2: ["titleType", "keysAvailable", "outstandingLoan"],
           3: ["zipCode", "mileage"],
           4: ["startsDrives"],
@@ -1123,6 +1175,33 @@ function createServer() {
         var requiredIds = requiredByStep[currentStep] || [];
 
         var hasError = false;
+        if (currentStep === 1) {
+          var activeTab = document.querySelector('.tab-button.active').getAttribute('data-tab');
+          var vinEl = byId("vinNumber");
+          var plateEl = byId("licensePlate");
+          var plateZipEl = byId("plateZipCode");
+          clearFieldError(vinEl);
+          clearFieldError(plateEl);
+          clearFieldError(plateZipEl);
+          
+          if (activeTab === 'vin') {
+            var val = (vinEl.value || "").trim();
+            if (!val || val.length !== 17) {
+              setFieldError(vinEl, "Please enter a valid 17-character VIN.");
+              hasError = true;
+            }
+          } else {
+            if (!String(plateEl.value || "").trim()) {
+              setFieldError(plateEl, "License Plate is required.");
+              hasError = true;
+            }
+            var zipVal = String(plateZipEl.value || "").trim();
+            if (!zipVal || zipVal.length !== 5) {
+              setFieldError(plateZipEl, "Please enter a valid 5-digit ZIP.");
+              hasError = true;
+            }
+          }
+        }
         for (var i = 0; i < requiredIds.length; i++) {
           var id = requiredIds[i];
           var el = byId(id);
@@ -1184,14 +1263,17 @@ function createServer() {
       }
 
       function toPayload() {
-        var yearVal = byId("year").value;
-        var mileageVal = byId("mileage").value;
+        var yearVal = byId("year") ? byId("year").value : null;
+        var mileageVal = byId("mileage") ? byId("mileage").value : "";
         var damageAreas = getDamageAreas();
         return {
-          year: yearVal ? Number(yearVal) : "",
-          make: byId("make").value,
-          model: byId("model").value,
-          trim: byId("trim").value,
+          vin: byId("vinNumber") ? byId("vinNumber").value : "",
+          licensePlate: byId("licensePlate") ? byId("licensePlate").value : "",
+          plateZipCode: byId("plateZipCode") ? byId("plateZipCode").value : "",
+          year: yearVal ? Number(yearVal) : undefined,
+          make: byId("make") ? byId("make").value : undefined,
+          model: byId("model") ? byId("model").value : undefined,
+          trim: byId("trim") ? byId("trim").value : undefined,
           titleType: byId("titleType").value,
           zipCode: byId("zipCode").value,
           mileage: mileageVal ? Number(mileageVal) : "",
@@ -1340,6 +1422,36 @@ function createServer() {
           syncChoiceButtons("airbagsDeployed");
           syncChoiceButtons("fireFloodDamage");
 
+          
+          var tabButtons = document.querySelectorAll('.tab-button');
+          var tabContents = document.querySelectorAll('.tab-content');
+          var tabIndicator = byId('tabIndicator');
+
+          for (var i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].addEventListener('click', function(e) {
+              var targetTab = this.getAttribute('data-tab');
+              for (var j = 0; j < tabButtons.length; j++) {
+                tabButtons[j].classList.remove('active');
+                tabContents[j].classList.remove('active');
+              }
+              this.classList.add('active');
+              byId(targetTab + '-tab').classList.add('active');
+              
+              if (targetTab === 'vin') {
+                tabIndicator.style.transform = 'translateX(0)';
+              } else {
+                tabIndicator.style.transform = 'translateX(100%)';
+              }
+            });
+          }
+          
+          var plateZip = byId("plateZipCode");
+          var step3Zip = byId("zipCode");
+          if(plateZip && step3Zip) {
+            plateZip.addEventListener("input", function() { step3Zip.value = this.value; });
+            step3Zip.addEventListener("input", function() { plateZip.value = this.value; });
+          }
+
           prefillFromToolInput();
 
           syncChoiceButtons("titleType");
@@ -1388,6 +1500,9 @@ function createServer() {
       description: "Open an interactive vehicle quote form in chat.",
       inputSchema: {
         utterance: z.string().min(2).optional(),
+        vin: z.string().min(17).max(17).optional(),
+        licensePlate: z.string().optional(),
+        plateZipCode: z.string().regex(/^[0-9]{5}$/).optional(),
         year: z.number().int().min(1980).max(new Date().getFullYear() + 1).optional(),
         make: z.string().min(1).optional(),
         model: z.string().min(1).optional(),
@@ -1430,10 +1545,13 @@ function createServer() {
       title: "Create Vehicle Quote",
       description: "Generate a prototype vehicle offer using year, make, model, trim, title, location, and vehicle state.",
       inputSchema: {
-        year: z.number().int().min(1980).max(new Date().getFullYear() + 1),
-        make: z.string().min(1),
-        model: z.string().min(1),
-        trim: z.string().min(1),
+        vin: z.string().min(17).max(17).optional(),
+        licensePlate: z.string().optional(),
+        plateZipCode: z.string().regex(/^[0-9]{5}$/).optional(),
+        year: z.number().int().min(1980).max(new Date().getFullYear() + 1).optional(),
+        make: z.string().min(1).optional(),
+        model: z.string().min(1).optional(),
+        trim: z.string().min(1).optional(),
         titleType: z.enum(["clean", "salvage", "rebuilt", "no_title"]),
         zipCode: z.string().regex(/^[0-9]{5}$/),
         mileage: z.number().int().min(0).max(500000),
@@ -1471,10 +1589,13 @@ function createServer() {
       title: "Submit Vehicle Quote From UI",
       description: "Used by the quote widget to submit form data and retrieve an offer.",
       inputSchema: {
-        year: z.number().int().min(1980).max(new Date().getFullYear() + 1),
-        make: z.string().min(1),
-        model: z.string().min(1),
-        trim: z.string().min(1),
+        vin: z.string().min(17).max(17).optional(),
+        licensePlate: z.string().optional(),
+        plateZipCode: z.string().regex(/^[0-9]{5}$/).optional(),
+        year: z.number().int().min(1980).max(new Date().getFullYear() + 1).optional(),
+        make: z.string().min(1).optional(),
+        model: z.string().min(1).optional(),
+        trim: z.string().min(1).optional(),
         titleType: z.enum(["clean", "salvage", "rebuilt", "no_title"]),
         zipCode: z.string().regex(/^[0-9]{5}$/),
         mileage: z.number().int().min(0).max(500000),
