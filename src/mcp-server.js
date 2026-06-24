@@ -9,6 +9,10 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 dotenv.config();
 
 const mcpPort = Number(process.env.PORT || process.env.MCP_PORT || 8788);
+const quoteApiBaseUrlRaw = process.env.QUOTE_API_BASE_URL || "http://localhost:8787";
+const quoteApiBaseUrl = /^https?:\/\//i.test(quoteApiBaseUrlRaw)
+  ? quoteApiBaseUrlRaw
+  : `https://${quoteApiBaseUrlRaw}`;
 const allowedHosts = String(process.env.MCP_ALLOWED_HOSTS || "")
   .split(",")
   .map((value) => value.trim())
@@ -17,15 +21,19 @@ const allowedHosts = String(process.env.MCP_ALLOWED_HOSTS || "")
 const transports = {};
 
 async function requestQuote(args) {
-  // Mock response for demonstration
-  const body = {
-    firmOffer: 3850,
-    minOffer: 3500,
-    maxOffer: 4200,
-    confidence: "High",
-    acceptUrl: "https://www.cashforcars.com/instaquote/",
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-  };
+  const response = await fetch(`${quoteApiBaseUrl}/api/quote`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(args)
+  });
+
+  const body = await response.json();
+  if (!response.ok) {
+    return {
+      ok: false,
+      error: body?.error || "Quote API returned an error."
+    };
+  }
 
   const summary = [
     `Firm Offer: $${body.firmOffer}`,
@@ -1709,12 +1717,19 @@ function createServer() {
       }
     },
     async ({ quoteId }) => {
-      // Mock acceptance for demonstration
-      const body = {
-        message: "Quote accepted successfully (Demo Mode).",
-        quoteId,
-        status: "accepted"
-      };
+      const response = await fetch(`${quoteApiBaseUrl}/api/accept`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ quoteId })
+      });
+
+      const body = await response.json();
+      if (!response.ok) {
+        return {
+          isError: true,
+          content: [{ type: "text", text: body?.error || "Accept API returned an error." }]
+        };
+      }
 
       return {
         content: [{ type: "text", text: `${body.message} Quote ID: ${body.quoteId}` }],
@@ -1815,7 +1830,7 @@ app.listen(mcpPort, (error) => {
   }
 
   console.log(`MCP server listening on http://localhost:${mcpPort}/mcp`);
-  console.log(`Running in standalone Mock Mode (No external API needed)`);
+  console.log(`Quote API target is ${quoteApiBaseUrl}`);
 });
 
 process.on("SIGINT", async () => {
