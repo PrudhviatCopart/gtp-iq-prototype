@@ -502,7 +502,7 @@ function createServer() {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        margin-top: 20px;
+        margin: 0 0 4px;
         background: transparent;
         border: none;
         color: var(--text-muted);
@@ -516,6 +516,49 @@ function createServer() {
       .offer-back-btn:hover {
         color: var(--text-main);
         background: #f1f5f9;
+      }
+      .offer-headline {
+        font-size: 18px;
+        line-height: 1.4;
+        color: var(--text-main);
+        margin-bottom: 20px;
+      }
+      .offer-vehicle {
+        font-weight: 800;
+        color: var(--primary);
+      }
+      .offer-benefits {
+        max-width: 500px;
+        margin: 28px auto 0;
+        padding: 28px 24px 4px;
+      }
+      .benefit-list {
+        list-style: none;
+        margin: 0 0 28px;
+        padding: 0;
+      }
+      .benefit-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 18px;
+        font-size: 16px;
+        color: var(--text-main);
+        text-align: left;
+      }
+      .benefit-item:last-child {
+        margin-bottom: 0;
+      }
+      .benefit-check {
+        flex: 0 0 auto;
+        display: inline-flex;
+      }
+      .offer-tagline {
+        text-align: center;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.3;
+        color: var(--text-main);
       }
       .confetti-layer {
         position: absolute;
@@ -935,8 +978,24 @@ function createServer() {
           slot.removeChild(slot.firstChild);
         }
 
+        var back = document.createElement("button");
+        back.type = "button";
+        back.className = "offer-back-btn";
+        back.innerHTML = '<span class="back-icon" aria-hidden="true">&#8592;</span>Back to edit details';
+        back.addEventListener("click", restoreForm);
+
         var card = document.createElement("div");
         card.className = "offer-card";
+
+        var headline = document.createElement("div");
+        headline.className = "offer-headline";
+        var vehicle = getVehicleName();
+        if (vehicle) {
+          headline.innerHTML = "We're ready to pick up your <span class=\"offer-vehicle\"></span> and pay you";
+          headline.querySelector(".offer-vehicle").textContent = vehicle;
+        } else {
+          headline.textContent = "We're ready to pick up your vehicle and pay you";
+        }
 
         var label = document.createElement("div");
         label.className = "offer-label";
@@ -953,20 +1012,69 @@ function createServer() {
         accept.rel = "noopener";
         accept.href = String(data.acceptUrl || "https://www.cashforcars.com/instaquote/");
 
-        var back = document.createElement("button");
-        back.type = "button";
-        back.className = "offer-back-btn";
-        back.innerHTML = '<span class="back-icon" aria-hidden="true">&#8592;</span>Back to edit details';
-        back.addEventListener("click", restoreForm);
-
+        card.appendChild(headline);
         card.appendChild(label);
         card.appendChild(price);
         card.appendChild(accept);
-        card.appendChild(back);
+
+        slot.appendChild(back);
         slot.appendChild(card);
+        slot.appendChild(buildOfferBenefits());
         slot.classList.remove("hidden");
 
         launchConfetti();
+      }
+
+      function getVehicleName() {
+        var parts = [];
+        var ids = ["year", "make", "model", "trim"];
+        for (var i = 0; i < ids.length; i++) {
+          var el = byId(ids[i]);
+          var val = el ? String(el.value || "").trim() : "";
+          if (val) {
+            parts.push(val);
+          }
+        }
+        if (parts.length) {
+          return parts.join(" ");
+        }
+        // Demo fallback when the form has no decoded vehicle yet.
+        return "2021 HONDA ACCORD EX";
+      }
+
+      function buildOfferBenefits() {
+        var wrap = document.createElement("div");
+        wrap.className = "offer-benefits";
+
+        var items = [
+          "Schedule a pickup time that's convenient for you",
+          "Meet our licensed tower for a payment at pickup",
+          "We can be there in as little as 24 hours"
+        ];
+        var list = document.createElement("ul");
+        list.className = "benefit-list";
+        for (var i = 0; i < items.length; i++) {
+          var li = document.createElement("li");
+          li.className = "benefit-item";
+          var check = document.createElement("span");
+          check.className = "benefit-check";
+          check.setAttribute("aria-hidden", "true");
+          check.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#00A94F" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#00A94F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          var text = document.createElement("span");
+          text.className = "benefit-text";
+          text.textContent = items[i];
+          li.appendChild(check);
+          li.appendChild(text);
+          list.appendChild(li);
+        }
+
+        var tagline = document.createElement("div");
+        tagline.className = "offer-tagline";
+        tagline.innerHTML = "The fastest, safest, easiest<br>way to sell your car";
+
+        wrap.appendChild(list);
+        wrap.appendChild(tagline);
+        return wrap;
       }
 
       function restoreForm() {
