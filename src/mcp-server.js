@@ -462,6 +462,7 @@ function createServer() {
         text-align: center;
         width: 100%;
         max-width: 500px;
+        margin: 24px auto 0;
       }
       .offer-label {
         font-size: 13px;
@@ -648,6 +649,8 @@ function createServer() {
             </svg>
           </div>
           </div>
+        <div id="offerSlot" class="hidden"></div>
+        <div id="formBody">
         <div class="wizard-top">
           <button id="prevBtn" type="button" class="top-back-btn hidden"><span class="back-icon" aria-hidden="true">&#8592;</span>Back</button>
           <div id="stepHeader" class="step-header">Step 1 of 6</div>
@@ -813,6 +816,7 @@ function createServer() {
           <button id="nextBtn" type="button">Next</button>
           <button id="quoteBtn" type="button" class="hidden">Get Quote</button>
         </div>
+        </div>
         <div id="status" class="hidden"></div>
       </div>
     </div>
@@ -865,20 +869,22 @@ function createServer() {
       }
 
       function renderOffer(data) {
-        var status = byId("status");
-        if (!status) {
+        var slot = byId("offerSlot");
+        if (!slot) {
           return;
         }
 
-        showStatus("");
-        setFullOfferMode(true);
+        hideStatus();
 
-        while (status.firstChild) {
-          status.removeChild(status.firstChild);
+        // Hide the wizard form so the offer takes its place in the widget body.
+        var formBody = byId("formBody");
+        if (formBody) {
+          formBody.classList.add("hidden");
         }
 
-        var wrap = document.createElement("div");
-        wrap.className = "offer-wrap";
+        while (slot.firstChild) {
+          slot.removeChild(slot.firstChild);
+        }
 
         var card = document.createElement("div");
         card.className = "offer-card";
@@ -891,10 +897,6 @@ function createServer() {
         price.className = "offer-price";
         price.textContent = "$" + String(data.firmOffer || "");
 
-        var range = document.createElement("div");
-        range.style.cssText = "font-size:14px;color:var(--text-muted);margin-bottom:24px;";
-        range.textContent = "Range: $" + String(data.minOffer || "") + " – $" + String(data.maxOffer || "");
-
         var accept = document.createElement("a");
         accept.className = "accept-btn";
         accept.textContent = "Accept Offer";
@@ -904,10 +906,9 @@ function createServer() {
 
         card.appendChild(label);
         card.appendChild(price);
-        if (data.minOffer && data.maxOffer) { card.appendChild(range); }
         card.appendChild(accept);
-        wrap.appendChild(card);
-        status.appendChild(wrap);
+        slot.appendChild(card);
+        slot.classList.remove("hidden");
       }
 
       function prefillFromToolInput() {
