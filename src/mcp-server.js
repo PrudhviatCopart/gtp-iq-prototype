@@ -981,7 +981,12 @@ function createServer() {
         var back = document.createElement("button");
         back.type = "button";
         back.className = "offer-back-btn";
-        back.innerHTML = '<span class="back-icon" aria-hidden="true">&#8592;</span>Back to edit details';
+        var backIcon = document.createElement("span");
+        backIcon.className = "back-icon";
+        backIcon.setAttribute("aria-hidden", "true");
+        backIcon.textContent = "←";
+        back.appendChild(backIcon);
+        back.appendChild(document.createTextNode("Back to edit details"));
         back.addEventListener("click", restoreForm);
 
         var card = document.createElement("div");
@@ -991,8 +996,12 @@ function createServer() {
         headline.className = "offer-headline";
         var vehicle = getVehicleName();
         if (vehicle) {
-          headline.innerHTML = "We're ready to pick up your <span class=\"offer-vehicle\"></span> and pay you";
-          headline.querySelector(".offer-vehicle").textContent = vehicle;
+          headline.appendChild(document.createTextNode("We're ready to pick up your "));
+          var vehicleSpan = document.createElement("span");
+          vehicleSpan.className = "offer-vehicle";
+          vehicleSpan.textContent = vehicle;
+          headline.appendChild(vehicleSpan);
+          headline.appendChild(document.createTextNode(" and pay you"));
         } else {
           headline.textContent = "We're ready to pick up your vehicle and pay you";
         }
@@ -1059,7 +1068,7 @@ function createServer() {
           var check = document.createElement("span");
           check.className = "benefit-check";
           check.setAttribute("aria-hidden", "true");
-          check.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#00A94F" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#00A94F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+          check.appendChild(buildCheckIcon());
           var text = document.createElement("span");
           text.className = "benefit-text";
           text.textContent = items[i];
@@ -1070,11 +1079,37 @@ function createServer() {
 
         var tagline = document.createElement("div");
         tagline.className = "offer-tagline";
-        tagline.innerHTML = "The fastest, safest, easiest<br>way to sell your car";
+        tagline.appendChild(document.createTextNode("The fastest, safest, easiest"));
+        tagline.appendChild(document.createElement("br"));
+        tagline.appendChild(document.createTextNode("way to sell your car"));
 
         wrap.appendChild(list);
         wrap.appendChild(tagline);
         return wrap;
+      }
+
+      function buildCheckIcon() {
+        var ns = "http://www.w3.org/2000/svg";
+        var svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("width", "22");
+        svg.setAttribute("height", "22");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        var circle = document.createElementNS(ns, "circle");
+        circle.setAttribute("cx", "12");
+        circle.setAttribute("cy", "12");
+        circle.setAttribute("r", "10");
+        circle.setAttribute("stroke", "#00A94F");
+        circle.setAttribute("stroke-width", "2");
+        var path = document.createElementNS(ns, "path");
+        path.setAttribute("d", "M8 12.5l2.5 2.5L16 9");
+        path.setAttribute("stroke", "#00A94F");
+        path.setAttribute("stroke-width", "2");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        svg.appendChild(circle);
+        svg.appendChild(path);
+        return svg;
       }
 
       function restoreForm() {
