@@ -699,11 +699,11 @@ function createServer() {
         <div id="formBody">
         <div class="wizard-top">
           <button id="prevBtn" type="button" class="top-back-btn hidden"><span class="back-icon" aria-hidden="true">&#8592;</span>Back</button>
-          <div id="stepHeader" class="step-header">Step 1 of 6</div>
+          <div id="stepHeader" class="step-header">Step 1 of 7</div>
         </div>
         <div class="progress-wrap" aria-label="Form progress">
-          <div class="progress-track"><div id="progressFill" class="progress-fill" style="width: 17%;"></div></div>
-          <div id="progressText" class="progress-text">17% complete</div>
+          <div class="progress-track"><div id="progressFill" class="progress-fill" style="width: 14%;"></div></div>
+          <div id="progressText" class="progress-text">14% complete</div>
         </div>
 
                 <div class="step" data-step="1">
@@ -808,6 +808,9 @@ function createServer() {
               <select id="hasDamage" class="hidden"><option value="" selected>Select</option><option value="frame_structural">Frame Or Structural</option><option value="body_panel">Body Panel</option><option value="scratches_dents">Scratches Or Dents</option><option value="little_to_no">Little Or No Visible</option></select>
             </div>
           </div>
+        </div>
+
+        <div class="step hidden" data-step="6">
           <div id="mechanicalDamageWrap" class="field dynamic-followup hidden">
             <label for="mechanicalDamage">Is There Mechanical Damage?</label>
             <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Is There Mechanical Damage?">
@@ -846,7 +849,7 @@ function createServer() {
           </div>
         </div>
 
-        <div class="step hidden" data-step="6">
+        <div class="step hidden" data-step="7">
           <div class="grid">
             <div class="field full-width"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
           </div>
@@ -869,7 +872,7 @@ function createServer() {
     <script>
       function byId(id) { return document.getElementById(id); }
       var currentStep = 1;
-      var totalSteps = 6;
+      var totalSteps = 7;
       var fullOfferMode = false;
 
       function setStatus(text) {
@@ -1344,7 +1347,8 @@ function createServer() {
           3: ["zipCode", "mileage"],
           4: ["startsDrives"],
           5: ["hasDamage"],
-          6: ["phoneNumber"]
+          6: [],
+          7: ["phoneNumber"]
         };
 
         var requiredIds = requiredByStep[currentStep] || [];
@@ -1397,7 +1401,7 @@ function createServer() {
           }
         }
 
-        if (currentStep === 5) {
+        if (currentStep === 6) {
           var hasDamage = byId("hasDamage").value;
           if (hasDamage === "frame_structural" || hasDamage === "body_panel" || hasDamage === "scratches_dents") {
             var anySelected = getDamageAreas().length > 0;
