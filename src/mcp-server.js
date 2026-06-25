@@ -181,8 +181,9 @@ function createServer() {
         border: 1px solid var(--border);
       }
       .top-back-btn:hover {
-        background: #f1f5f9;
-        color: var(--text-main);
+        background: var(--primary-light);
+        border-color: var(--primary);
+        color: var(--primary);
       }
       .back-icon {
         margin-right: 6px;
@@ -285,14 +286,15 @@ function createServer() {
         text-align: center;
       }
       .choice-btn:hover {
-        border-color: var(--border-hover);
-        color: var(--text-main);
-        background: #f8fafc;
+        border-color: var(--primary);
+        color: var(--primary);
+        background: var(--primary-light);
       }
       .choice-btn.selected {
         background: var(--primary-light);
         border-color: var(--primary);
         color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-ring);
       }
       .choice-group.input-error .choice-btn {
         border-color: var(--error);
@@ -346,6 +348,12 @@ function createServer() {
         color: var(--text-main);
         background: var(--card-bg);
       }
+      input::placeholder {
+        color: #94a3b8;
+      }
+      input:hover, select:hover {
+        border-color: var(--border-hover);
+      }
       input:focus, select:focus {
         outline: none;
         border-color: var(--primary);
@@ -358,9 +366,15 @@ function createServer() {
         font-weight: 600;
         cursor: pointer;
       }
-      button:hover {
+      /* Primary action buttons (Next / Get Quote) — keep crisp white text on a
+         darker-green hover, with a subtle lift. Secondary/outline buttons
+         (.choice-btn, .top-back-btn, .offer-back-btn, .damage-zone) define their
+         own :hover and must not inherit this. */
+      .step-actions button:hover {
         background: var(--primary-active);
-        color: var(--primary-light)!important;
+        color: #fff;
+        box-shadow: var(--shadow);
+        transform: translateY(-1px);
       }
       #status {
         margin-top: 20px;
@@ -502,20 +516,22 @@ function createServer() {
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        width: auto;
         margin: 0 0 4px;
         background: transparent;
-        border: none;
+        border: 1px solid transparent;
         color: var(--text-muted);
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
-        padding: 8px 12px;
+        padding: 8px 14px;
         border-radius: 8px;
         transition: var(--transition);
       }
       .offer-back-btn:hover {
-        color: var(--text-main);
-        background: #f1f5f9;
+        color: var(--primary);
+        background: var(--primary-light);
+        border-color: var(--primary);
       }
       .offer-headline {
         font-size: 18px;
@@ -618,6 +634,9 @@ function createServer() {
         flex: 1;
         text-align: center;
         margin: 0;
+      }
+      .tab-button:hover {
+        color: var(--text-main);
       }
       .tab-button.active {
         color: var(--primary);
