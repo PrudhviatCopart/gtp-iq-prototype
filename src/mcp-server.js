@@ -802,7 +802,10 @@ function createServer() {
             <div class="field full-width"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
           </div>
           <div class="trust-badge">
-            <img src="https://www.cashforcars.com/services/instaquote-ws/instaquote/assets/images/shield-icon.png" alt="Privacy Shield" width="32" height="32" />
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" aria-label="Privacy Shield">
+              <path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V6L12 2z" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
+              <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
             <div class="legal-text">
               <strong>By continuing, you agree and consent to</strong> receive communications from us via text message or other then-current methods of communication to assist with the sale of your vehicle. <strong>We value your privacy.</strong> To opt-out of text communications from us, respond with "STOP". Message and data rates apply. Messaging frequency may vary. Please review our <a href="https://www.cashforcars.com/privacy-policy/" target="_blank" style="color: var(--primary); font-weight: 600;">Privacy policy</a> to learn more.
             </div>
