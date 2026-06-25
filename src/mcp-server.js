@@ -359,6 +359,50 @@ function createServer() {
         border-color: var(--primary);
         box-shadow: 0 0 0 3px var(--primary-ring);
       }
+      .phone-input {
+        display: flex;
+        align-items: stretch;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        background: var(--card-bg);
+        transition: var(--transition);
+        overflow: hidden;
+      }
+      .phone-input:hover {
+        border-color: var(--border-hover);
+      }
+      .phone-input:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-ring);
+      }
+      .phone-input.input-error {
+        border-color: #cf2e2e;
+      }
+      .phone-prefix {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 12px;
+        background: #f1f5f9;
+        border-right: 1px solid var(--border);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-main);
+        white-space: nowrap;
+      }
+      .phone-prefix .us-flag {
+        border-radius: 2px;
+        display: block;
+      }
+      .phone-input input {
+        border: 0;
+        border-radius: 0;
+        flex: 1;
+        box-shadow: none;
+      }
+      .phone-input input:focus {
+        box-shadow: none;
+      }
       button {
         border: 0;
         background: var(--primary);
@@ -963,7 +1007,27 @@ function createServer() {
 
         <div class="step hidden" data-step="7">
           <div class="grid">
-            <div class="field full-width"><label for="phoneNumber">Phone Number</label><input id="phoneNumber" value="" /></div>
+            <div class="field full-width"><label for="phoneNumber">Phone Number</label>
+              <div class="phone-input">
+                <span class="phone-prefix" aria-hidden="true">
+                  <svg class="us-flag" viewBox="0 0 28 20" width="22" height="16" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="US">
+                    <rect width="28" height="20" fill="#fff"/>
+                    <g fill="#b22234">
+                      <rect width="28" height="1.54" y="0"/>
+                      <rect width="28" height="1.54" y="3.08"/>
+                      <rect width="28" height="1.54" y="6.15"/>
+                      <rect width="28" height="1.54" y="9.23"/>
+                      <rect width="28" height="1.54" y="12.31"/>
+                      <rect width="28" height="1.54" y="15.38"/>
+                      <rect width="28" height="1.54" y="18.46"/>
+                    </g>
+                    <rect width="11.2" height="10.77" fill="#3c3b6e"/>
+                  </svg>
+                  <span class="phone-code">+1</span>
+                </span>
+                <input id="phoneNumber" type="tel" inputmode="numeric" autocomplete="tel" maxlength="14" placeholder="(123) 456-7890" value="" />
+              </div>
+            </div>
           </div>
           <div class="trust-badge">
             <img src="https://www.cashforcars.com/services/instaquote-ws/instaquote/assets/images/shield-icon.png" alt="Privacy Shield" width="32" height="32" />
@@ -1225,6 +1289,36 @@ function createServer() {
             }
           });
         }, 500);
+      }
+
+      function formatPhone(digits) {
+        var d = String(digits).replace(/\D/g, "").substring(0, 10);
+        if (d.length === 0) {
+          return "";
+        }
+        if (d.length < 4) {
+          return "(" + d;
+        }
+        if (d.length < 7) {
+          return "(" + d.substring(0, 3) + ") " + d.substring(3);
+        }
+        return "(" + d.substring(0, 3) + ") " + d.substring(3, 6) + "-" + d.substring(6);
+      }
+
+      function handlePhoneInput() {
+        var phoneEl = byId("phoneNumber");
+        if (!phoneEl) {
+          return;
+        }
+        clearFieldError(phoneEl);
+        phoneEl.value = formatPhone(phoneEl.value);
+      }
+
+      function setupPhoneInput() {
+        var phoneEl = byId("phoneNumber");
+        if (phoneEl) {
+          phoneEl.addEventListener("input", handlePhoneInput);
+        }
       }
 
       function setupVehicleDecoder() {
@@ -1665,7 +1759,15 @@ function createServer() {
           syncChoiceButtons("mechanicalDamage");
           clearFieldError(byId("mechanicalDamage"));
         } else if (hasDamage === "little_to_no") {
-          mechanicalDamageWrap.classList.remove("hidden");
+          // Only ask about mechanical damage when the vehicle starts and drives.
+          if (startsDrives === "starts_and_drives") {
+            mechanicalDamageWrap.classList.remove("hidden");
+          } else {
+            mechanicalDamageWrap.classList.add("hidden");
+            byId("mechanicalDamage").value = "";
+            syncChoiceButtons("mechanicalDamage");
+            clearFieldError(byId("mechanicalDamage"));
+          }
           airbagsDeployedWrap.classList.add("hidden");
           fireFloodDamageWrap.classList.add("hidden");
           damageAreaWrap.classList.add("hidden");
@@ -1693,6 +1795,10 @@ function createServer() {
           return;
         }
         el.classList.remove("input-error");
+        var phoneWrap = el.closest ? el.closest(".phone-input") : null;
+        if (phoneWrap) {
+          phoneWrap.classList.remove("input-error");
+        }
         var group = getChoiceGroup(el.id);
         if (group) {
           group.classList.remove("input-error");
@@ -1708,6 +1814,10 @@ function createServer() {
           return;
         }
         el.classList.add("input-error");
+        var phoneWrap = el.closest ? el.closest(".phone-input") : null;
+        if (phoneWrap) {
+          phoneWrap.classList.add("input-error");
+        }
         var group = getChoiceGroup(el.id);
         if (group) {
           group.classList.add("input-error");
@@ -1723,7 +1833,9 @@ function createServer() {
         errorEl.id = el.id + "-error";
         errorEl.className = "field-error";
         errorEl.textContent = message;
-        el.parentNode.appendChild(errorEl);
+        // Append to the surrounding .field so flex wrappers (phone) keep layout.
+        var container = (el.closest && el.closest(".field")) || el.parentNode;
+        container.appendChild(errorEl);
       }
 
       function getChoiceGroup(fieldId) {
@@ -1880,6 +1992,15 @@ function createServer() {
           }
         }
 
+        if (currentStep === 7) {
+          var phoneEl = byId("phoneNumber");
+          var phoneDigits = String(phoneEl.value || "").replace(/\D/g, "");
+          if (phoneDigits.length !== 10) {
+            setFieldError(phoneEl, "Please enter a valid 10-digit phone number.");
+            hasError = true;
+          }
+        }
+
         if (currentStep === 6) {
           var hasDamage = byId("hasDamage").value;
           if (hasDamage === "frame_structural" || hasDamage === "body_panel" || hasDamage === "scratches_dents") {
@@ -1905,7 +2026,8 @@ function createServer() {
               hasError = true;
             }
           } else if (hasDamage === "little_to_no") {
-            if (!String(byId("mechanicalDamage").value || "").trim()) {
+            // Mechanical damage is only asked (and required) when it starts and drives.
+            if (byId("startsDrives").value === "starts_and_drives" && !String(byId("mechanicalDamage").value || "").trim()) {
               setFieldError(byId("mechanicalDamage"), "This field is required.");
               hasError = true;
             }
@@ -1946,7 +2068,7 @@ function createServer() {
           mechanicalDamage: byId("mechanicalDamage").value,
           airbagsDeployed: byId("airbagsDeployed").value,
           fireFloodDamage: byId("fireFloodDamage").value,
-          phoneNumber: byId("phoneNumber").value
+          phoneNumber: byId("phoneNumber") ? String(byId("phoneNumber").value || "").replace(/\D/g, "") : ""
         };
       }
 
@@ -2101,6 +2223,7 @@ function createServer() {
           }
 
           setupVehicleDecoder();
+          setupPhoneInput();
 
           prefillFromToolInput();
 
@@ -2110,6 +2233,10 @@ function createServer() {
           }
           if (byId("plateZipCode") && byId("plateZipCode").value.trim().length === 5) {
             handleZipInput();
+          }
+          // Normalize any prefilled phone number into the formatted display.
+          if (byId("phoneNumber") && byId("phoneNumber").value) {
+            handlePhoneInput();
           }
 
           syncChoiceButtons("titleType");
