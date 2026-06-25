@@ -1242,7 +1242,7 @@ function createServer() {
         }
         clearFieldError(plateEl);
         // Uppercase and disallow spaces (matches the working LP widget).
-        plateEl.value = plateEl.value.toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9-]/g, "");
+        plateEl.value = plateEl.value.toUpperCase().replace(/[^A-Z0-9-]/g, "");
         if (plateDecodeTimer) {
           clearTimeout(plateDecodeTimer);
         }
@@ -1292,7 +1292,7 @@ function createServer() {
       }
 
       function formatPhone(digits) {
-        var d = String(digits).replace(/\D/g, "").substring(0, 10);
+        var d = String(digits).replace(/[^0-9]/g, "").substring(0, 10);
         if (d.length === 0) {
           return "";
         }
@@ -1334,7 +1334,7 @@ function createServer() {
             e.preventDefault();
             var clip = (e.clipboardData || window.clipboardData);
             var text = clip ? clip.getData("text") : "";
-            text = String(text).replace(/\s+/g, "");
+            text = String(text).replace(/[^A-Za-z0-9-]/g, "");
             var start = plateEl.selectionStart || 0;
             var end = plateEl.selectionEnd || 0;
             var current = plateEl.value;
@@ -1994,7 +1994,7 @@ function createServer() {
 
         if (currentStep === 7) {
           var phoneEl = byId("phoneNumber");
-          var phoneDigits = String(phoneEl.value || "").replace(/\D/g, "");
+          var phoneDigits = String(phoneEl.value || "").replace(/[^0-9]/g, "");
           if (phoneDigits.length !== 10) {
             setFieldError(phoneEl, "Please enter a valid 10-digit phone number.");
             hasError = true;
@@ -2068,7 +2068,7 @@ function createServer() {
           mechanicalDamage: byId("mechanicalDamage").value,
           airbagsDeployed: byId("airbagsDeployed").value,
           fireFloodDamage: byId("fireFloodDamage").value,
-          phoneNumber: byId("phoneNumber") ? String(byId("phoneNumber").value || "").replace(/\D/g, "") : ""
+          phoneNumber: byId("phoneNumber") ? String(byId("phoneNumber").value || "").replace(/[^0-9]/g, "") : ""
         };
       }
 
@@ -2104,6 +2104,22 @@ function createServer() {
         hideStatus();
       }
 
+      // Step 6 holds only conditional damage follow-ups. If none apply, it is empty.
+      function isStepEmpty(step) {
+        if (step !== 6) {
+          return false;
+        }
+        updateConditionalFields();
+        var ids = ["damageAreaWrap", "airbagsDeployedWrap", "fireFloodDamageWrap", "mechanicalDamageWrap"];
+        for (var i = 0; i < ids.length; i++) {
+          var el = byId(ids[i]);
+          if (el && !el.classList.contains("hidden")) {
+            return false;
+          }
+        }
+        return true;
+      }
+
       function goNext() {
         updateConditionalFields();
         if (!validateRequiredFields()) {
@@ -2111,6 +2127,10 @@ function createServer() {
         }
         if (currentStep < totalSteps) {
           currentStep += 1;
+          // Skip a step that has no questions to show (e.g. empty Step 6).
+          while (currentStep < totalSteps && isStepEmpty(currentStep)) {
+            currentStep += 1;
+          }
           renderStep();
         }
       }
@@ -2118,6 +2138,10 @@ function createServer() {
       function goPrev() {
         if (currentStep > 1) {
           currentStep -= 1;
+          // Skip back over any empty step too.
+          while (currentStep > 1 && isStepEmpty(currentStep)) {
+            currentStep -= 1;
+          }
           renderStep();
         }
       }
