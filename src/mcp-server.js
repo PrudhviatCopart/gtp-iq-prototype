@@ -854,13 +854,16 @@ function createServer() {
         </div>
 
         <div class="step hidden" data-step="6">
-          <div id="mechanicalDamageWrap" class="field dynamic-followup hidden">
-            <label for="mechanicalDamage">Is There Mechanical Damage?</label>
-            <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Is There Mechanical Damage?">
-              <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
-              <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
+          <div id="damageAreaWrap" class="field hidden">
+            <label>Select the Damaged Area(s)</label>
+            <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
+              <button type="button" class="damage-zone zone-front" data-zone="Front">Front</button>
+              <button type="button" class="damage-zone zone-rear" data-zone="Rear">Rear</button>
+              <button type="button" class="damage-zone zone-top" data-zone="Top">Top</button>
+              <button type="button" class="damage-zone zone-side-left" data-zone="Side">Left</button>
+              <button type="button" class="damage-zone zone-side-right" data-zone="Side">Right</button>
             </div>
-            <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
+            <div class="damage-hint">Tap the highlighted zones to mark damaged areas.</div>
           </div>
           <div id="airbagsDeployedWrap" class="field dynamic-followup hidden">
             <label for="airbagsDeployed">Has The Airbags Been Deployed?</label>
@@ -879,16 +882,13 @@ function createServer() {
             </div>
             <select id="fireFloodDamage" class="hidden"><option value="" selected>Select</option><option value="fire_damage">Fire Damage</option><option value="flood_damage">Flood Damage</option><option value="no">No</option></select>
           </div>
-          <div id="damageAreaWrap" class="field hidden">
-            <label>Select the Damaged Area(s)</label>
-            <div id="damageMap" class="damage-map" role="group" aria-label="Select damaged areas">
-              <button type="button" class="damage-zone zone-front" data-zone="Front">Front</button>
-              <button type="button" class="damage-zone zone-rear" data-zone="Rear">Rear</button>
-              <button type="button" class="damage-zone zone-top" data-zone="Top">Top</button>
-              <button type="button" class="damage-zone zone-side-left" data-zone="Side">Left</button>
-              <button type="button" class="damage-zone zone-side-right" data-zone="Side">Right</button>
+          <div id="mechanicalDamageWrap" class="field dynamic-followup hidden">
+            <label for="mechanicalDamage">Is There Mechanical Damage?</label>
+            <div class="choice-group" data-field="mechanicalDamage" role="group" aria-label="Is There Mechanical Damage?">
+              <button type="button" class="choice-btn" data-value="yes" aria-pressed="false">Yes</button>
+              <button type="button" class="choice-btn" data-value="no" aria-pressed="false">No</button>
             </div>
-            <div class="damage-hint">Tap the highlighted zones to mark damaged areas.</div>
+            <select id="mechanicalDamage" class="hidden"><option value="" selected>Select</option><option>yes</option><option>no</option></select>
           </div>
         </div>
 
