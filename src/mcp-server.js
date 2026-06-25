@@ -494,6 +494,52 @@ function createServer() {
         background: var(--primary-active);
         box-shadow: var(--shadow);
       }
+      #offerSlot {
+        position: relative;
+        overflow: hidden;
+      }
+      .offer-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 20px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 8px;
+        transition: var(--transition);
+      }
+      .offer-back-btn:hover {
+        color: var(--text-main);
+        background: #f1f5f9;
+      }
+      .confetti-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 5;
+      }
+      .confetti-piece {
+        position: absolute;
+        top: -10px;
+        width: 8px;
+        height: 14px;
+        border-radius: 2px;
+        opacity: 0.9;
+        animation-name: confetti-fall;
+        animation-timing-function: ease-in;
+        animation-iteration-count: 1;
+        animation-fill-mode: forwards;
+      }
+      @keyframes confetti-fall {
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(420px) rotate(720deg); opacity: 0; }
+      }
       .input-error {
         border-color: #cf2e2e;
       }
@@ -904,11 +950,62 @@ function createServer() {
         accept.rel = "noopener";
         accept.href = String(data.acceptUrl || "https://www.cashforcars.com/instaquote/");
 
+        var back = document.createElement("button");
+        back.type = "button";
+        back.className = "offer-back-btn";
+        back.innerHTML = '<span class="back-icon" aria-hidden="true">&#8592;</span>Back to edit details';
+        back.addEventListener("click", restoreForm);
+
         card.appendChild(label);
         card.appendChild(price);
         card.appendChild(accept);
+        card.appendChild(back);
         slot.appendChild(card);
         slot.classList.remove("hidden");
+
+        launchConfetti();
+      }
+
+      function restoreForm() {
+        var slot = byId("offerSlot");
+        if (slot) {
+          slot.classList.add("hidden");
+          while (slot.firstChild) {
+            slot.removeChild(slot.firstChild);
+          }
+        }
+        var formBody = byId("formBody");
+        if (formBody) {
+          formBody.classList.remove("hidden");
+        }
+        currentStep = totalSteps;
+        renderStep();
+      }
+
+      function launchConfetti() {
+        var host = byId("offerSlot");
+        if (!host) {
+          return;
+        }
+        var layer = document.createElement("div");
+        layer.className = "confetti-layer";
+        layer.setAttribute("aria-hidden", "true");
+        var colors = ["#00A94F", "#22c55e", "#facc15", "#3b82f6", "#ef4444", "#a855f7"];
+        for (var i = 0; i < 40; i++) {
+          var piece = document.createElement("span");
+          piece.className = "confetti-piece";
+          piece.style.left = (Math.random() * 100) + "%";
+          piece.style.background = colors[i % colors.length];
+          piece.style.animationDelay = (Math.random() * 0.4) + "s";
+          piece.style.animationDuration = (1.4 + Math.random() * 0.8) + "s";
+          layer.appendChild(piece);
+        }
+        host.appendChild(layer);
+        setTimeout(function() {
+          if (layer.parentNode) {
+            layer.parentNode.removeChild(layer);
+          }
+        }, 2800);
       }
 
       function prefillFromToolInput() {
