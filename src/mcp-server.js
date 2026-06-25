@@ -607,6 +607,51 @@ function createServer() {
         font-size: 13px;
         color: #b42318;
       }
+      .decode-box {
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .decode-box::before {
+        content: "";
+        width: 16px;
+        height: 16px;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: var(--primary);
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center/contain no-repeat;
+      }
+      .zip-info {
+        margin-top: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+      }
+      @keyframes decode-spin { to { transform: rotate(360deg); } }
+      .field-decoding {
+        position: relative;
+      }
+      .field-decoding input {
+        padding-right: 40px;
+      }
+      .field-decoding::after {
+        content: "";
+        position: absolute;
+        right: 12px;
+        top: 41px;
+        width: 18px;
+        height: 18px;
+        border: 3px solid #cbd5e1;
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: decode-spin 0.7s linear infinite;
+        pointer-events: none;
+      }
 
     
       .tab-navigation {
@@ -775,14 +820,20 @@ function createServer() {
             <button type="button" class="tab-button" data-tab="license-plate">LICENSE PLATE</button>
           </div>
           <div class="tab-content active" id="vin-tab">
-            <div class="field"><label for="vinNumber">VIN Number</label><input id="vinNumber" placeholder="Enter 17-character VIN" maxlength="17" style="text-transform: uppercase;" /></div>
+            <div class="field"><label for="vinNumber">VIN Number</label><input id="vinNumber" placeholder="Enter 17-character VIN" maxlength="17" style="text-transform: uppercase;" /><div id="vinDecodeBox" class="decode-box hidden"></div></div>
           </div>
           <div class="tab-content" id="license-plate-tab">
             <div class="grid">
-              <div class="field"><label for="licensePlate">License Plate</label><input id="licensePlate" placeholder="License Plate" style="text-transform: uppercase;" /></div>
-              <div class="field"><label for="plateZipCode">ZIP Code</label><input id="plateZipCode" placeholder="ZIP Code" maxlength="5" /></div>
+              <div class="field"><label for="licensePlate">License Plate</label><input id="licensePlate" placeholder="License Plate" maxlength="8" style="text-transform: uppercase;" /></div>
+              <div class="field"><label for="plateZipCode">ZIP Code</label><input id="plateZipCode" placeholder="ZIP Code" maxlength="5" /><div id="zipInfoBox" class="zip-info hidden"></div></div>
             </div>
+            <div id="plateDecodeBox" class="decode-box hidden"></div>
           </div>
+          <input type="hidden" id="year" value="" />
+          <input type="hidden" id="make" value="" />
+          <input type="hidden" id="model" value="" />
+          <input type="hidden" id="trim" value="" />
+          <input type="hidden" id="decodedVin" value="" />
         </div>
 
         <div class="step hidden" data-step="2">
@@ -936,6 +987,260 @@ function createServer() {
       var currentStep = 1;
       var totalSteps = 7;
       var fullOfferMode = false;
+
+      // ---- Vehicle decoder (VIN + license plate) via Copart InstaQuote APIs ----
+      var DECODE_BASE = "https://c-services-qa5.copart.com/instaquote-ws/instaquote";
+      var API_VIN_DECODE = DECODE_BASE + "/v3/public/vehicle/check/rules";
+      var API_PLATE_DECODE = DECODE_BASE + "/v3/public/license-plate-decode";
+      var API_ZIP_LOOKUP = DECODE_BASE + "/v3/public/get-geo-details?zipcode=";
+
+      var resolvedState = "";
+      var resolvedCity = "";
+      var resolvedZip = "";
+      var vinDecodeTimer = null;
+      var plateDecodeTimer = null;
+      var zipTimer = null;
+      var vinReqId = 0;
+      var plateReqId = 0;
+
+      function setVehicle(year, make, model, trim, vin) {
+        if (byId("year")) byId("year").value = year ? String(year) : "";
+        if (byId("make")) byId("make").value = make ? String(make) : "";
+        if (byId("model")) byId("model").value = model ? String(model) : "";
+        if (byId("trim")) byId("trim").value = trim ? String(trim) : "";
+        if (byId("decodedVin")) byId("decodedVin").value = vin ? String(vin) : "";
+      }
+
+      function clearVehicle() {
+        setVehicle("", "", "", "", "");
+      }
+
+      function vehicleLabel(v) {
+        return [v.year, v.make, v.model, v.trim].filter(Boolean).join(" ");
+      }
+
+      function showDecodeBox(boxId, text) {
+        var box = byId(boxId);
+        if (!box) {
+          return;
+        }
+        if (text) {
+          box.textContent = text;
+          box.classList.remove("hidden");
+        } else {
+          box.textContent = "";
+          box.classList.add("hidden");
+        }
+      }
+
+      function setFieldDecoding(inputEl, on) {
+        if (!inputEl) {
+          return;
+        }
+        var wrap = inputEl.closest(".field");
+        if (!wrap) {
+          return;
+        }
+        if (on) {
+          wrap.classList.add("field-decoding");
+        } else {
+          wrap.classList.remove("field-decoding");
+        }
+      }
+
+      function validVin(v) {
+        return /^[A-HJ-NPR-Z0-9]{17}$/.test(v);
+      }
+
+      function validPlate(p) {
+        return /^[A-Z0-9 -]{1,8}$/.test(p);
+      }
+
+      async function decodeVinApi(vin) {
+        try {
+          var res = await fetch(API_VIN_DECODE, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ vin: vin })
+          });
+          if (!res.ok) {
+            return null;
+          }
+          return await res.json();
+        } catch (e) {
+          return null;
+        }
+      }
+
+      async function decodePlateApi(plate, zip) {
+        try {
+          var res = await fetch(API_PLATE_DECODE, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ licensePlateNumber: plate, zipCode: zip })
+          });
+          if (!res.ok) {
+            return null;
+          }
+          return await res.json();
+        } catch (e) {
+          return null;
+        }
+      }
+
+      async function lookupZip(zip) {
+        try {
+          var res = await fetch(API_ZIP_LOOKUP + zip);
+          if (!res.ok) {
+            return null;
+          }
+          var data = await res.json();
+          if (!data || !data.length) {
+            return null;
+          }
+          return data[0];
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function handleVinInput() {
+        var vinEl = byId("vinNumber");
+        if (!vinEl) {
+          return;
+        }
+        clearFieldError(vinEl);
+        vinEl.value = vinEl.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        showDecodeBox("vinDecodeBox", "");
+        clearVehicle();
+        if (vinDecodeTimer) {
+          clearTimeout(vinDecodeTimer);
+        }
+        var vin = vinEl.value.trim();
+        if (!validVin(vin)) {
+          return;
+        }
+        vinDecodeTimer = setTimeout(function() {
+          var reqId = ++vinReqId;
+          setFieldDecoding(vinEl, true);
+          decodeVinApi(vin).then(function(resp) {
+            if (reqId !== vinReqId) {
+              return;
+            }
+            setFieldDecoding(vinEl, false);
+            if (!resp || resp.vindecode === "error") {
+              setFieldError(vinEl, "We couldn't decode that VIN. Please double-check it.");
+              clearVehicle();
+              return;
+            }
+            setVehicle(resp.year, resp.make, resp.model, resp.trim, vin);
+            showDecodeBox("vinDecodeBox", vehicleLabel(resp));
+          });
+        }, 600);
+      }
+
+      function runPlateDecode() {
+        var plateEl = byId("licensePlate");
+        if (!plateEl) {
+          return;
+        }
+        var plate = plateEl.value.trim();
+        var zip = byId("plateZipCode") ? byId("plateZipCode").value.trim() : "";
+        showDecodeBox("plateDecodeBox", "");
+        clearVehicle();
+        if (!validPlate(plate) || zip.length !== 5 || !resolvedState) {
+          return;
+        }
+        var reqId = ++plateReqId;
+        setFieldDecoding(plateEl, true);
+        decodePlateApi(plate, resolvedZip || zip).then(function(resp) {
+          if (reqId !== plateReqId) {
+            return;
+          }
+          setFieldDecoding(plateEl, false);
+          var vehicle = null;
+          if (resp) {
+            vehicle = resp.vehicleDetails || resp.vehicle || (resp.data && resp.data.vehicleDetails) || resp;
+          }
+          if (!vehicle || (!vehicle.vin && !vehicle.make && !vehicle.year)) {
+            setFieldError(plateEl, "We couldn't decode that plate. Please check the plate and ZIP.");
+            clearVehicle();
+            return;
+          }
+          setVehicle(vehicle.year, vehicle.make, vehicle.model, vehicle.trim, vehicle.vin);
+          showDecodeBox("plateDecodeBox", vehicleLabel(vehicle));
+        });
+      }
+
+      function handlePlateInput() {
+        var plateEl = byId("licensePlate");
+        if (!plateEl) {
+          return;
+        }
+        clearFieldError(plateEl);
+        plateEl.value = plateEl.value.toUpperCase().replace(/[^A-Z0-9 -]/g, "");
+        if (plateDecodeTimer) {
+          clearTimeout(plateDecodeTimer);
+        }
+        plateDecodeTimer = setTimeout(runPlateDecode, 600);
+      }
+
+      function handleZipInput() {
+        var zipEl = byId("plateZipCode");
+        if (!zipEl) {
+          return;
+        }
+        clearFieldError(zipEl);
+        zipEl.value = zipEl.value.replace(/[^0-9]/g, "").substring(0, 5);
+        resolvedState = "";
+        resolvedCity = "";
+        resolvedZip = "";
+        showDecodeBox("zipInfoBox", "");
+        if (byId("zipCode")) {
+          byId("zipCode").value = zipEl.value;
+        }
+        if (zipTimer) {
+          clearTimeout(zipTimer);
+        }
+        var zip = zipEl.value.trim();
+        if (zip.length !== 5) {
+          return;
+        }
+        zipTimer = setTimeout(function() {
+          setFieldDecoding(zipEl, true);
+          lookupZip(zip).then(function(geo) {
+            setFieldDecoding(zipEl, false);
+            if (!geo || !geo.stateCode) {
+              setFieldError(zipEl, "We couldn't find that ZIP code.");
+              return;
+            }
+            resolvedState = geo.stateCode;
+            resolvedCity = geo.cityName;
+            resolvedZip = geo.zipCode;
+            showDecodeBox("zipInfoBox", geo.cityName + ", " + geo.stateCode);
+            // If a plate is already entered, decode now that ZIP is resolved.
+            var plateEl = byId("licensePlate");
+            if (plateEl && validPlate(plateEl.value.trim())) {
+              runPlateDecode();
+            }
+          });
+        }, 500);
+      }
+
+      function setupVehicleDecoder() {
+        var vinEl = byId("vinNumber");
+        if (vinEl) {
+          vinEl.addEventListener("input", handleVinInput);
+        }
+        var plateEl = byId("licensePlate");
+        if (plateEl) {
+          plateEl.addEventListener("input", handlePlateInput);
+        }
+        var zipEl = byId("plateZipCode");
+        if (zipEl) {
+          zipEl.addEventListener("input", handleZipInput);
+        }
+      }
 
       function setStatus(text) {
         var el = byId("status");
@@ -1607,8 +1912,10 @@ function createServer() {
         var yearVal = byId("year") ? byId("year").value : null;
         var mileageVal = byId("mileage") ? byId("mileage").value : "";
         var damageAreas = getDamageAreas();
+        var typedVin = byId("vinNumber") ? byId("vinNumber").value : "";
+        var decodedVin = byId("decodedVin") ? byId("decodedVin").value : "";
         return {
-          vin: byId("vinNumber") ? byId("vinNumber").value : "",
+          vin: typedVin || decodedVin || "",
           licensePlate: byId("licensePlate") ? byId("licensePlate").value : "",
           plateZipCode: byId("plateZipCode") ? byId("plateZipCode").value : "",
           year: yearVal ? Number(yearVal) : undefined,
@@ -1778,11 +2085,20 @@ function createServer() {
           var plateZip = byId("plateZipCode");
           var step3Zip = byId("zipCode");
           if(plateZip && step3Zip) {
-            plateZip.addEventListener("input", function() { step3Zip.value = this.value; });
             step3Zip.addEventListener("input", function() { plateZip.value = this.value; });
           }
 
+          setupVehicleDecoder();
+
           prefillFromToolInput();
+
+          // If the tool prefilled a VIN/plate/ZIP, decode it right away.
+          if (byId("vinNumber") && validVin(byId("vinNumber").value.trim())) {
+            handleVinInput();
+          }
+          if (byId("plateZipCode") && byId("plateZipCode").value.trim().length === 5) {
+            handleZipInput();
+          }
 
           syncChoiceButtons("titleType");
           syncChoiceButtons("keysAvailable");
