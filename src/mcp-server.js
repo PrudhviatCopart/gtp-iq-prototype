@@ -820,14 +820,13 @@ function createServer() {
             <button type="button" class="tab-button" data-tab="license-plate">LICENSE PLATE</button>
           </div>
           <div class="tab-content active" id="vin-tab">
-            <div class="field"><label for="vinNumber">VIN Number</label><input id="vinNumber" placeholder="Enter 17-character VIN" maxlength="17" style="text-transform: uppercase;" /><div id="vinDecodeBox" class="decode-box hidden"></div></div>
+            <div class="field"><label for="vinNumber">VIN Number</label><input id="vinNumber" placeholder="Enter your 17-Character VIN" maxlength="17" autocapitalize="characters" /><div id="vinDecodeBox" class="decode-box hidden"></div></div>
           </div>
           <div class="tab-content" id="license-plate-tab">
             <div class="grid">
-              <div class="field"><label for="licensePlate">License Plate</label><input id="licensePlate" placeholder="License Plate" maxlength="8" style="text-transform: uppercase;" /></div>
+              <div class="field"><label for="licensePlate">License Plate</label><input id="licensePlate" placeholder="License Plate" maxlength="8" autocapitalize="characters" /><div id="plateDecodeBox" class="decode-box hidden"></div></div>
               <div class="field"><label for="plateZipCode">ZIP Code</label><input id="plateZipCode" placeholder="ZIP Code" maxlength="5" /><div id="zipInfoBox" class="zip-info hidden"></div></div>
             </div>
-            <div id="plateDecodeBox" class="decode-box hidden"></div>
           </div>
           <input type="hidden" id="year" value="" />
           <input type="hidden" id="make" value="" />
@@ -1053,7 +1052,7 @@ function createServer() {
       }
 
       function validPlate(p) {
-        return /^[A-Z0-9 -]{1,8}$/.test(p);
+        return /^[A-Z0-9-]{1,8}$/.test(p);
       }
 
       async function decodeVinApi(vin) {
@@ -1178,7 +1177,8 @@ function createServer() {
           return;
         }
         clearFieldError(plateEl);
-        plateEl.value = plateEl.value.toUpperCase().replace(/[^A-Z0-9 -]/g, "");
+        // Uppercase and disallow spaces (matches the working LP widget).
+        plateEl.value = plateEl.value.toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9-]/g, "");
         if (plateDecodeTimer) {
           clearTimeout(plateDecodeTimer);
         }
@@ -1235,6 +1235,18 @@ function createServer() {
         var plateEl = byId("licensePlate");
         if (plateEl) {
           plateEl.addEventListener("input", handlePlateInput);
+          // Strip spaces on paste (matches the working LP widget).
+          plateEl.addEventListener("paste", function(e) {
+            e.preventDefault();
+            var clip = (e.clipboardData || window.clipboardData);
+            var text = clip ? clip.getData("text") : "";
+            text = String(text).replace(/\s+/g, "");
+            var start = plateEl.selectionStart || 0;
+            var end = plateEl.selectionEnd || 0;
+            var current = plateEl.value;
+            plateEl.value = current.slice(0, start) + text + current.slice(end);
+            handlePlateInput();
+          });
         }
         var zipEl = byId("plateZipCode");
         if (zipEl) {
