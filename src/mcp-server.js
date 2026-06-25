@@ -1442,30 +1442,9 @@ function createServer() {
             return;
           }
 
-          if (!window.openai || typeof window.openai.callTool !== "function") {
-            showStatus("Calculating...");
-            setTimeout(function() { renderOffer(DEMO_OFFER); }, 800);
-            return;
-          }
-
+          // Demo mode: always render a mock instant offer with an Accept button.
           showStatus("Calculating...");
-          var result = await window.openai.callTool("submit_vehicle_quote_from_ui", toPayload());
-
-          if (result && result.structuredContent && result.structuredContent.ok) {
-            if (result.structuredContent.eligible === false) {
-              showStatus(formatResult(result.structuredContent));
-            } else {
-              renderOffer(result.structuredContent);
-            }
-            return;
-          }
-
-          if (result && result.content && result.content[0] && result.content[0].text) {
-            showStatus(result.content[0].text);
-            return;
-          }
-
-          showStatus("Unexpected response from tool.");
+          setTimeout(function() { renderOffer(DEMO_OFFER); }, 800);
         } catch (error) {
           showStatus(String(error));
         }
