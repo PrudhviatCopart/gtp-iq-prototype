@@ -420,6 +420,29 @@ function createServer() {
         box-shadow: var(--shadow);
         transform: translateY(-1px);
       }
+      .step-actions button:disabled,
+      .step-actions button.btn-busy {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+      .step-actions button.btn-busy {
+        position: relative;
+        color: transparent;
+      }
+      .step-actions button.btn-busy::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        margin: -8px 0 0 -8px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: decode-spin 0.7s linear infinite;
+      }
       #status {
         margin-top: 20px;
         border: 1px solid var(--border);
@@ -912,8 +935,8 @@ function createServer() {
 
         <div class="step hidden" data-step="3">
           <div class="grid">
-            <div class="field"><label for="zipCode">Zip Code</label><input id="zipCode" value="" /></div>
-            <div class="field"><label for="mileage">Mileage/Odometer reading?</label><input id="mileage" value="" /></div>
+            <div class="field"><label for="zipCode">Zip Code</label><input id="zipCode" value="" inputmode="numeric" maxlength="5" placeholder="5-digit ZIP" /></div>
+            <div class="field"><label for="mileage">Mileage/Odometer reading?</label><input id="mileage" value=",000" inputmode="numeric" maxlength="7" /></div>
           </div>
         </div>
 
@@ -1065,6 +1088,28 @@ function createServer() {
       var zipTimer = null;
       var vinReqId = 0;
       var plateReqId = 0;
+      // Number of in-flight decode/lookup calls; Next is disabled on step 1 while > 0.
+      var decodeInFlight = 0;
+
+      function beginDecode() {
+        decodeInFlight += 1;
+        updateNextDisabled();
+      }
+
+      function endDecode() {
+        decodeInFlight = Math.max(0, decodeInFlight - 1);
+        updateNextDisabled();
+      }
+
+      function updateNextDisabled() {
+        var nextBtn = byId("nextBtn");
+        if (!nextBtn) {
+          return;
+        }
+        var busy = currentStep === 1 && decodeInFlight > 0;
+        nextBtn.disabled = busy;
+        nextBtn.classList.toggle("btn-busy", busy);
+      }
 
       function setVehicle(year, make, model, trim, vin) {
         if (byId("year")) byId("year").value = year ? String(year) : "";
@@ -1167,6 +1212,8 @@ function createServer() {
         }
       }
 
+      var vinPending = false;
+
       function handleVinInput() {
         var vinEl = byId("vinNumber");
         if (!vinEl) {
@@ -1181,7 +1228,17 @@ function createServer() {
         }
         var vin = vinEl.value.trim();
         if (!validVin(vin)) {
+          // Release any pending hold the prior keystroke placed.
+          if (vinPending) {
+            vinPending = false;
+            endDecode();
+          }
           return;
+        }
+        // Hold Next from the moment a complete VIN is present until decode resolves.
+        if (!vinPending) {
+          vinPending = true;
+          beginDecode();
         }
         vinDecodeTimer = setTimeout(function() {
           var reqId = ++vinReqId;
@@ -1191,6 +1248,10 @@ function createServer() {
               return;
             }
             setFieldDecoding(vinEl, false);
+            if (vinPending) {
+              vinPending = false;
+              endDecode();
+            }
             if (!resp || resp.vindecode === "error") {
               setFieldError(vinEl, "We couldn't decode that VIN. Please double-check it.");
               clearVehicle();
@@ -1202,6 +1263,8 @@ function createServer() {
         }, 600);
       }
 
+      var platePending = false;
+
       function runPlateDecode() {
         var plateEl = byId("licensePlate");
         if (!plateEl) {
@@ -1212,7 +1275,15 @@ function createServer() {
         showDecodeBox("plateDecodeBox", "");
         clearVehicle();
         if (!validPlate(plate) || zip.length !== 5 || !resolvedState) {
+          if (platePending) {
+            platePending = false;
+            endDecode();
+          }
           return;
+        }
+        if (!platePending) {
+          platePending = true;
+          beginDecode();
         }
         var reqId = ++plateReqId;
         setFieldDecoding(plateEl, true);
@@ -1221,6 +1292,10 @@ function createServer() {
             return;
           }
           setFieldDecoding(plateEl, false);
+          if (platePending) {
+            platePending = false;
+            endDecode();
+          }
           var vehicle = null;
           if (resp) {
             vehicle = resp.vehicleDetails || resp.vehicle || (resp.data && resp.data.vehicleDetails) || resp;
@@ -1246,8 +1321,17 @@ function createServer() {
         if (plateDecodeTimer) {
           clearTimeout(plateDecodeTimer);
         }
+        // Hold Next until the (debounced) decode resolves, when inputs are complete.
+        var plate = plateEl.value.trim();
+        var zip = byId("plateZipCode") ? byId("plateZipCode").value.trim() : "";
+        if (validPlate(plate) && zip.length === 5 && resolvedState && !platePending) {
+          platePending = true;
+          beginDecode();
+        }
         plateDecodeTimer = setTimeout(runPlateDecode, 600);
       }
+
+      var zipPending = false;
 
       function handleZipInput() {
         var zipEl = byId("plateZipCode");
@@ -1268,12 +1352,24 @@ function createServer() {
         }
         var zip = zipEl.value.trim();
         if (zip.length !== 5) {
+          if (zipPending) {
+            zipPending = false;
+            endDecode();
+          }
           return;
+        }
+        if (!zipPending) {
+          zipPending = true;
+          beginDecode();
         }
         zipTimer = setTimeout(function() {
           setFieldDecoding(zipEl, true);
           lookupZip(zip).then(function(geo) {
             setFieldDecoding(zipEl, false);
+            if (zipPending) {
+              zipPending = false;
+              endDecode();
+            }
             if (!geo || !geo.stateCode) {
               setFieldError(zipEl, "We couldn't find that ZIP code.");
               return;
@@ -1318,6 +1414,59 @@ function createServer() {
         var phoneEl = byId("phoneNumber");
         if (phoneEl) {
           phoneEl.addEventListener("input", handlePhoneInput);
+        }
+      }
+
+      // Mileage is entered in thousands: the field always ends with ",000" and the
+      // user types up to 3 leading digits (so 123 -> "123,000").
+      function formatMileage(value) {
+        var lead = String(value).replace(/[^0-9]/g, "");
+        // Drop the trailing "000" that belongs to the fixed suffix, keep leading digits.
+        if (lead.length > 3) {
+          lead = lead.substring(0, lead.length - 3);
+        } else {
+          lead = lead.replace(/0+$/, "");
+        }
+        lead = lead.substring(0, 3);
+        return lead + ",000";
+      }
+
+      function handleMileageInput() {
+        var mileageEl = byId("mileage");
+        if (!mileageEl) {
+          return;
+        }
+        clearFieldError(mileageEl);
+        mileageEl.value = formatMileage(mileageEl.value);
+        // Keep the caret just before the ",000" suffix.
+        var pos = mileageEl.value.length - 4;
+        try {
+          mileageEl.setSelectionRange(pos, pos);
+        } catch (e) {}
+      }
+
+      function setupStep3Inputs() {
+        var zipEl = byId("zipCode");
+        if (zipEl) {
+          zipEl.addEventListener("input", function() {
+            clearFieldError(zipEl);
+            zipEl.value = zipEl.value.replace(/[^0-9]/g, "").substring(0, 5);
+            // Keep the step-1 plate ZIP mirrored.
+            if (byId("plateZipCode")) {
+              byId("plateZipCode").value = zipEl.value;
+            }
+          });
+        }
+        var mileageEl = byId("mileage");
+        if (mileageEl) {
+          mileageEl.addEventListener("input", handleMileageInput);
+          mileageEl.addEventListener("focus", function() {
+            // Place caret before the ",000" suffix on focus.
+            var pos = mileageEl.value.length - 4;
+            try {
+              mileageEl.setSelectionRange(pos, pos);
+            } catch (e) {}
+          });
         }
       }
 
@@ -1935,7 +2084,7 @@ function createServer() {
         var requiredByStep = {
           1: [],
           2: ["titleType", "keysAvailable", "outstandingLoan"],
-          3: ["zipCode", "mileage"],
+          3: [],
           4: ["startsDrives"],
           5: ["hasDamage"],
           6: [],
@@ -1980,6 +2129,27 @@ function createServer() {
 
           if (!value) {
             setFieldError(el, "This field is required.");
+            hasError = true;
+          }
+        }
+
+        if (currentStep === 3) {
+          var zip3El = byId("zipCode");
+          var zip3 = String(zip3El.value || "").replace(/[^0-9]/g, "");
+          if (zip3.length !== 5) {
+            setFieldError(zip3El, "Please enter a valid 5-digit ZIP.");
+            hasError = true;
+          }
+          var mileageEl3 = byId("mileage");
+          var mileageLead = String(mileageEl3.value || "").replace(/[^0-9]/g, "");
+          // Strip the fixed ",000" suffix to check the user actually entered thousands.
+          if (mileageLead.length > 3) {
+            mileageLead = mileageLead.substring(0, mileageLead.length - 3);
+          } else {
+            mileageLead = mileageLead.replace(/0+$/, "");
+          }
+          if (!mileageLead) {
+            setFieldError(mileageEl3, "Please enter the mileage.");
             hasError = true;
           }
         }
@@ -2044,7 +2214,14 @@ function createServer() {
 
       function toPayload() {
         var yearVal = byId("year") ? byId("year").value : null;
-        var mileageVal = byId("mileage") ? byId("mileage").value : "";
+        // Mileage is shown in thousands ("123,000"); convert leading digits to a number.
+        var mileageLeadStr = byId("mileage") ? String(byId("mileage").value || "").replace(/[^0-9]/g, "") : "";
+        if (mileageLeadStr.length > 3) {
+          mileageLeadStr = mileageLeadStr.substring(0, mileageLeadStr.length - 3);
+        } else {
+          mileageLeadStr = mileageLeadStr.replace(/0+$/, "");
+        }
+        var mileageVal = mileageLeadStr ? Number(mileageLeadStr) * 1000 : "";
         var damageAreas = getDamageAreas();
         var typedVin = byId("vinNumber") ? byId("vinNumber").value : "";
         var decodedVin = byId("decodedVin") ? byId("decodedVin").value : "";
@@ -2057,8 +2234,8 @@ function createServer() {
           model: byId("model") ? byId("model").value : undefined,
           trim: byId("trim") ? byId("trim").value : undefined,
           titleType: byId("titleType").value,
-          zipCode: byId("zipCode").value,
-          mileage: mileageVal ? Number(mileageVal) : "",
+          zipCode: byId("zipCode") ? String(byId("zipCode").value || "").replace(/[^0-9]/g, "") : "",
+          mileage: mileageVal,
           startsDrives: byId("startsDrives").value,
           missingReplacedParts: byId("missingReplacedParts").value,
           outstandingLoan: byId("outstandingLoan").value,
@@ -2101,6 +2278,7 @@ function createServer() {
           progressText.textContent = String(progressPct) + "% complete";
         }
 
+        updateNextDisabled();
         hideStatus();
       }
 
@@ -2240,14 +2418,9 @@ function createServer() {
             });
           }
           
-          var plateZip = byId("plateZipCode");
-          var step3Zip = byId("zipCode");
-          if(plateZip && step3Zip) {
-            step3Zip.addEventListener("input", function() { plateZip.value = this.value; });
-          }
-
           setupVehicleDecoder();
           setupPhoneInput();
+          setupStep3Inputs();
 
           prefillFromToolInput();
 
@@ -2261,6 +2434,10 @@ function createServer() {
           // Normalize any prefilled phone number into the formatted display.
           if (byId("phoneNumber") && byId("phoneNumber").value) {
             handlePhoneInput();
+          }
+          // Normalize any prefilled mileage into the thousands display.
+          if (byId("mileage")) {
+            byId("mileage").value = formatMileage(byId("mileage").value);
           }
 
           syncChoiceButtons("titleType");
